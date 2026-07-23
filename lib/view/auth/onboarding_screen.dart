@@ -147,12 +147,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         if (mounted) _continueController.reset();
       });
     } else {
-      context.go(AppRoutes.signIn);
+      context.go(AppRoutes.logIn);
     }
   }
 
   void _onSkip() {
-    context.go(AppRoutes.signIn);
+    context.go(AppRoutes.logIn);
   }
 
   @override

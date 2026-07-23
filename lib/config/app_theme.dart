@@ -12,6 +12,7 @@ class AppTheme {
       surface: AppColors.bgColor,
       onPrimary: AppColors.onPrimary,
       primary: AppColors.primary,
+      error: AppColors.error,
     );
     final c = colorScheme;
 
