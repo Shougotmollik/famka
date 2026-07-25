@@ -7,16 +7,15 @@ import 'package:pinput/pinput.dart';
 import '../../config/router_path.dart';
 import '../widgets/custom_elevated_button.dart';
 
-class RegisterVerificationScreen extends StatefulWidget {
-  const RegisterVerificationScreen({super.key});
+class ForgotVerificationScreen extends StatefulWidget {
+  const ForgotVerificationScreen({super.key});
 
   @override
-  State<RegisterVerificationScreen> createState() =>
-      _RegisterVerificationScreenState();
+  State<ForgotVerificationScreen> createState() =>
+      _ForgotVerificationScreenState();
 }
 
-class _RegisterVerificationScreenState
-    extends State<RegisterVerificationScreen> {
+class _ForgotVerificationScreenState extends State<ForgotVerificationScreen> {
   final TextEditingController _pinController = TextEditingController();
   Timer? _countdownTimer;
   int _remainingSeconds = 41;
@@ -106,7 +105,7 @@ class _RegisterVerificationScreenState
             children: [
               SizedBox(height: 60.h),
               Text(
-                'Account verification',
+                'Forgot Password',
                 style: TextStyle(
                   fontSize: 24.sp,
                   fontWeight: FontWeight.w700,
@@ -115,7 +114,7 @@ class _RegisterVerificationScreenState
               ),
               SizedBox(height: 12.h),
               Text(
-                'Please enter the four verification code we sent to',
+                'Please enter the verification code we sent to',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade400),
               ),
@@ -136,7 +135,7 @@ class _RegisterVerificationScreenState
               ),
               SizedBox(height: 40.h),
               CustomElevatedButton(
-                onPressed: () => context.go(AppRoutes.uploadProfileImage),
+                onPressed: () => context.push(AppRoutes.resetPassword),
                 title: 'Verify',
                 color: primaryColor,
                 textColor: Colors.white,
@@ -146,7 +145,7 @@ class _RegisterVerificationScreenState
               if (_isResending)
                 RichText(
                   text: TextSpan(
-                    text: "Didn't get the email? ",
+                    text: "Didn't get the code? ",
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: Colors.grey.shade300,
@@ -176,7 +175,7 @@ class _RegisterVerificationScreenState
               else if (_remainingSeconds > 0)
                 RichText(
                   text: TextSpan(
-                    text: "Didn't get the email? ",
+                    text: "Didn't get the code? ",
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: Colors.grey.shade300,
@@ -194,7 +193,7 @@ class _RegisterVerificationScreenState
                   onTap: _resendOtp,
                   child: RichText(
                     text: TextSpan(
-                      text: "Didn't get the email? ",
+                      text: "Didn't get the code? ",
                       style: TextStyle(
                         fontSize: 13.sp,
                         color: Colors.grey.shade300,

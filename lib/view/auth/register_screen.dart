@@ -215,7 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                     return;
                   }
-                  context.go(AppRoutes.home);
+                  context.go(AppRoutes.registerVerification);
                 },
                 title: 'Register',
                 color: c.primary,

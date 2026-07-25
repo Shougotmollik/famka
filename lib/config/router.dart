@@ -1,5 +1,10 @@
+import 'package:famka/view/auth/forgot_password_screen.dart';
+import 'package:famka/view/auth/forgot_verification_screen.dart';
 import 'package:famka/view/auth/log_in_screen.dart';
 import 'package:famka/view/auth/register_screen.dart';
+import 'package:famka/view/auth/register_verification_screen.dart';
+import 'package:famka/view/auth/reset_password_screen.dart';
+import 'package:famka/view/auth/upload_profile_image_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../view/main_nav_bar.dart';
@@ -27,6 +32,26 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.register,
       builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.registerVerification,
+      builder: (context, state) => RegisterVerificationScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.uploadProfileImage,
+      builder: (context, state) => const UploadProfileImageScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.forgotPassword,
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.forgotVerification,
+      builder: (context, state) => const ForgotVerificationScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.resetPassword,
+      builder: (context, state) => const ResetPasswordScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainNavBar(child: child),

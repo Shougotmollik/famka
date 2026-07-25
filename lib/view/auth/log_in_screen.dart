@@ -134,7 +134,7 @@ class _LogInScreenState extends State<LogInScreen> {
                     ],
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => context.push(AppRoutes.forgotPassword),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
@@ -151,7 +151,7 @@ class _LogInScreenState extends State<LogInScreen> {
               SizedBox(height: 32.h),
 
               CustomElevatedButton(
-                onPressed: () {},
+                onPressed: () => context.go(AppRoutes.home),
                 title: 'Log In',
                 color: c.primary,
                 textColor: c.onPrimary,
