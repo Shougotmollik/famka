@@ -1,3 +1,4 @@
+import 'package:famka/utils/form_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -34,71 +36,84 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: 24.h),
-              Text(
-                'Reset Password',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0XFF_B3B3B8),
-                  fontSize: 24.sp,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 24.h),
+                Text(
+                  'Reset Password',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0XFF_B3B3B8),
+                    fontSize: 24.sp,
+                  ),
                 ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'Enter your new password',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xff_B3B3B8),
-                  fontSize: 14.sp,
+                SizedBox(height: 8.h),
+                Text(
+                  'Enter your new password',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xff_B3B3B8),
+                    fontSize: 14.sp,
+                  ),
                 ),
-              ),
-              SizedBox(height: 40.h),
+                SizedBox(height: 40.h),
 
-              Text(
-                'New Password',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 14.sp,
+                Text(
+                  'New Password',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 14.sp,
+                  ),
                 ),
-              ),
-              SizedBox(height: 8.h),
-              AuthTextFormField(
-                hintText: 'Enter new password',
-                controller: _newPasswordController,
-                isPassword: true,
-              ),
-
-              SizedBox(height: 16.h),
-
-              Text(
-                'Confirm Password',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 14.sp,
+                SizedBox(height: 8.h),
+                AuthTextFormField(
+                  hintText: 'Enter new password',
+                  controller: _newPasswordController,
+                  isPassword: true,
+                  validator: FormValidator.validatePassword,
                 ),
-              ),
-              SizedBox(height: 8.h),
-              AuthTextFormField(
-                hintText: 'Confirm new password',
-                controller: _confirmPasswordController,
-                isPassword: true,
-              ),
 
-              SizedBox(height: 40.h),
+                SizedBox(height: 16.h),
 
-              CustomElevatedButton(
-                onPressed: () => context.go(AppRoutes.logIn),
-                title: 'Reset Password',
-                color: c.primary,
-                textColor: c.onPrimary,
-              ),
-            ],
+                Text(
+                  'Confirm Password',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AuthTextFormField(
+                  hintText: 'Confirm new password',
+                  controller: _confirmPasswordController,
+                  isPassword: true,
+                  validator: (value) => FormValidator.validateConfirmPassword(
+                    value,
+                    _newPasswordController.text,
+                  ),
+                ),
+
+                SizedBox(height: 40.h),
+
+                CustomElevatedButton(
+                  onPressed: () {
+                    FormValidator.validateAndProceed(
+                      _formKey,
+                      () => context.go(AppRoutes.logIn),
+                    );
+                  },
+                  title: 'Reset Password',
+                  color: c.primary,
+                  textColor: c.onPrimary,
+                ),
+              ],
+            ),
           ),
         ),
       ),

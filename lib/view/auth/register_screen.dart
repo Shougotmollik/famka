@@ -1,4 +1,5 @@
 import 'package:famka/config/app_colors.dart';
+import 'package:famka/utils/form_validator.dart';
 import 'package:famka/view/widgets/social_button.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   bool _agreed = false;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -43,249 +45,263 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: 16.h),
-              Center(
-                child: SvgPicture.asset(
-                  'assets/logo/applogo.svg',
-                  height: 36.h,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Text(
-                'Welcome',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0XFF_B3B3B8),
-                  fontSize: 24.sp,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'Register',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: const Color(0xff_B3B3B8),
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 32.h),
-
-              Text(
-                'Name',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 14.sp,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              AuthTextFormField(
-                hintText: 'Enter your name',
-                controller: _nameController,
-                keyboardType: TextInputType.name,
-              ),
-
-              SizedBox(height: 16.h),
-
-              Text(
-                'Email',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 14.sp,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              AuthTextFormField(
-                hintText: 'Enter email address',
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-              ),
-
-              SizedBox(height: 16.h),
-
-              Text(
-                'Password',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 14.sp,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              AuthTextFormField(
-                hintText: 'Enter your password',
-                controller: _passwordController,
-                isPassword: true,
-              ),
-
-              SizedBox(height: 16.h),
-
-              Text(
-                'Confirm Password',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 14.sp,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              AuthTextFormField(
-                hintText: 'Confirm password',
-                controller: _confirmPasswordController,
-                isPassword: true,
-              ),
-
-              SizedBox(height: 8.h),
-
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 24.w,
-                    height: 24.w,
-                    child: Checkbox(
-                      value: _agreed,
-                      onChanged: (val) {
-                        setState(() {
-                          _agreed = val ?? false;
-                        });
-                      },
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      side: BorderSide(color: Colors.white, width: 1.w),
-                      activeColor: c.primary,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 16.h),
+                Center(
+                  child: SvgPicture.asset(
+                    'assets/logo/applogo.svg',
+                    height: 36.h,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
+                ),
+                SizedBox(height: 24.h),
+                Text(
+                  'Welcome',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0XFF_B3B3B8),
+                    fontSize: 24.sp,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Register',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: const Color(0xff_B3B3B8),
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 32.h),
+
+                Text(
+                  'Name',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AuthTextFormField(
+                  hintText: 'Enter your name',
+                  controller: _nameController,
+                  keyboardType: TextInputType.name,
+                  validator: FormValidator.validateName,
+                ),
+
+                SizedBox(height: 16.h),
+
+                Text(
+                  'Email',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AuthTextFormField(
+                  hintText: 'Enter email address',
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: FormValidator.validateEmail,
+                ),
+
+                SizedBox(height: 16.h),
+
+                Text(
+                  'Password',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AuthTextFormField(
+                  hintText: 'Enter your password',
+                  controller: _passwordController,
+                  isPassword: true,
+                  validator: FormValidator.validatePassword,
+                ),
+
+                SizedBox(height: 16.h),
+
+                Text(
+                  'Confirm Password',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                AuthTextFormField(
+                  hintText: 'Confirm password',
+                  controller: _confirmPasswordController,
+                  isPassword: true,
+                  validator: (value) => FormValidator.validateConfirmPassword(
+                    value,
+                    _passwordController.text,
+                  ),
+                ),
+
+                SizedBox(height: 8.h),
+
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 24.w,
+                      height: 24.w,
+                      child: Checkbox(
+                        value: _agreed,
+                        onChanged: (val) {
+                          setState(() {
+                            _agreed = val ?? false;
+                          });
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        side: BorderSide(color: Colors.white, width: 1.w),
+                        activeColor: c.primary,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.sp,
+                            height: 1.5,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'By Register, you are agreeing to ',
+                            ),
+                            TextSpan(
+                              text: 'Terms of services\n',
+                              style: TextStyle(color: c.primary),
+                              recognizer: TapGestureRecognizer()..onTap = () {},
+                            ),
+                            const TextSpan(text: 'and '),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: TextStyle(color: c.primary),
+                              recognizer: TapGestureRecognizer()..onTap = () {},
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 32.h),
+
+                CustomElevatedButton(
+                  onPressed: () {
+                    if (!_agreed) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Please agree to the terms and conditions',
+                            style: TextStyle(color: AppColors.onPrimary),
+                          ),
+                          backgroundColor: c.primary,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
+
+                    FormValidator.validateAndProceed(
+                      _formKey,
+                      () => context.go(AppRoutes.registerVerification),
+                    );
+                  },
+                  title: 'Register',
+                  color: c.primary,
+                  textColor: c.onPrimary,
+                ),
+
+                SizedBox(height: 16.h),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Already have an account? ",
+                      style: TextStyle(color: Colors.white, fontSize: 13.sp),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        context.go(AppRoutes.logIn);
+                      },
+                      child: Text(
+                        'Log In',
+                        style: TextStyle(color: c.primary, fontSize: 13.sp),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 32.h),
+
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: c.outlineVariant)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Text(
+                        'Or continue with',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12.sp,
-                          height: 1.5,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
                         ),
-                        children: [
-                          const TextSpan(
-                            text: 'By Register, you are agreeing to ',
-                          ),
-                          TextSpan(
-                            text: 'Terms of services\n',
-                            style: TextStyle(color: c.primary),
-                            recognizer: TapGestureRecognizer()..onTap = () {},
-                          ),
-                          const TextSpan(text: 'and '),
-                          TextSpan(
-                            text: 'Privacy Policy',
-                            style: TextStyle(color: c.primary),
-                            recognizer: TapGestureRecognizer()..onTap = () {},
-                          ),
-                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    Expanded(child: Divider(color: c.outlineVariant)),
+                  ],
+                ),
 
-              SizedBox(height: 32.h),
+                SizedBox(height: 24.h),
 
-              CustomElevatedButton(
-                onPressed: () {
-                  if (!_agreed) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
-                          'Please agree to the terms and conditions',
-                          style: TextStyle(color: AppColors.onPrimary),
-                        ),
-                        backgroundColor: c.primary,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    return;
-                  }
-                  context.go(AppRoutes.registerVerification);
-                },
-                title: 'Register',
-                color: c.primary,
-                textColor: c.onPrimary,
-              ),
-
-              SizedBox(height: 16.h),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Already have an account? ",
-                    style: TextStyle(color: Colors.white, fontSize: 13.sp),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      context.go(AppRoutes.logIn);
-                    },
-                    child: Text(
-                      'Log In',
-                      style: TextStyle(color: c.primary, fontSize: 13.sp),
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 32.h),
-
-              Row(
-                children: [
-                  Expanded(child: Divider(color: c.outlineVariant)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Text(
-                      'Or continue with',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
+                Row(
+                  children: [
+                    Expanded(
+                      child: SocialButton(
+                        title: 'Google',
+                        icon: 'assets/icons/google.svg',
+                        onPressed: () {},
                       ),
                     ),
-                  ),
-                  Expanded(child: Divider(color: c.outlineVariant)),
-                ],
-              ),
-
-              SizedBox(height: 24.h),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: SocialButton(
-                      title: 'Google',
-                      icon: 'assets/icons/google.svg',
-                      onPressed: () {},
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: SocialButton(
+                        title: 'Apple',
+                        icon: 'assets/icons/apple.svg',
+                        onPressed: () {},
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: SocialButton(
-                      title: 'Apple',
-                      icon: 'assets/icons/apple.svg',
-                      onPressed: () {},
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 24.h),
-            ],
+                  ],
+                ),
+                SizedBox(height: 24.h),
+              ],
+            ),
           ),
         ),
       ),
