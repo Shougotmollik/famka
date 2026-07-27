@@ -11,6 +11,7 @@ class AppRoutes {
   static const String resetPassword = '/resetPassword';
   static const String home = '/home';
   static const String taskDetails = '/task-details';
+  static const String session = '/session';
   static const String statistics = '/statistics';
   static const String settings = '/settings';
 }

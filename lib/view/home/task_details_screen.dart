@@ -1,3 +1,4 @@
+import 'package:famka/config/router_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -14,6 +15,32 @@ class TaskDetailsScreen extends StatelessWidget {
     this.task,
     this.difficulty,
   });
+
+  static const _gradientTop = Color(0xFF241B35);
+  static const _gradientBottom = Color(0xFF12151C);
+
+  static BoxDecoration get _screenBackgroundDecoration {
+    const stepCount = 18;
+    final colors = List<Color>.generate(stepCount, (index) {
+      final t = index / (stepCount - 1);
+      final blend = Curves.easeOutCubic.transform(t);
+      return Color.lerp(_gradientTop, _gradientBottom, blend)!;
+    });
+    final stops = List<double>.generate(
+      stepCount,
+      (index) => index / (stepCount - 1),
+    );
+
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: colors,
+        stops: stops,
+        tileMode: TileMode.clamp,
+      ),
+    );
+  }
 
   static const _beforeYouStartItems = [
     'Use headphones for the best experience',
@@ -45,45 +72,12 @@ class TaskDetailsScreen extends StatelessWidget {
     final c = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: c.surface,
+      backgroundColor: _gradientBottom,
       body: Stack(
         children: [
           Positioned.fill(
             child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.18, 0.42, 0.68, 1.0],
-                  colors: [
-                    Color.lerp(c.surface, c.primary, 0.28)!,
-                    Color.lerp(c.surface, c.primary, 0.14)!,
-                    Color.lerp(c.surface, c.primary, 0.06)!,
-                    Color.lerp(c.surface, c.primary, 0.02)!,
-                    c.surface,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: -40.h,
-            left: 0,
-            right: 0,
-            height: 320.h,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 0.95,
-                  colors: [
-                    c.primary.withValues(alpha: 0.14),
-                    c.primary.withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.55, 1.0],
-                ),
-              ),
+              decoration: _screenBackgroundDecoration,
             ),
           ),
           SafeArea(
@@ -142,7 +136,9 @@ class TaskDetailsScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 24.h),
                                _StartListeningButton(
-                                 onPressed: () {},
+                                 onPressed: () {
+                                  context.push(AppRoutes.session);
+                                 },
                                  primaryColor: c.primary,
                                  textColor: c.onPrimary,
                                ),
@@ -236,7 +232,7 @@ class _InfoCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF2C323E),
+        color: const Color(0xFF262B35),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: c.outlineVariant.withValues(alpha: 0.35),

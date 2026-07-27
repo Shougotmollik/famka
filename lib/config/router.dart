@@ -5,6 +5,7 @@ import 'package:famka/view/auth/register_screen.dart';
 import 'package:famka/view/auth/register_verification_screen.dart';
 import 'package:famka/view/auth/reset_password_screen.dart';
 import 'package:famka/view/auth/upload_profile_image_screen.dart';
+import 'package:famka/view/home/session_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../view/main_nav_bar.dart';
@@ -67,6 +68,10 @@ final GoRouter appRouter = GoRouter(
           difficulty: extra?['difficulty'] as QuizDifficulty?,
         );
       },
+    ),
+    GoRoute(
+      path: AppRoutes.session,
+      builder: (context, state) => const SessionScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainNavBar(child: child),
