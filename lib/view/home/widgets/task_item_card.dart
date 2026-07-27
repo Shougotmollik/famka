@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import '../../../config/router_path.dart';
 import '../../../models/task_item_model.dart';
+import 'quiz_difficulty_dialog.dart';
 
 class TaskItemCard extends StatelessWidget {
   final TaskItemModel task;
@@ -15,6 +18,18 @@ class TaskItemCard extends StatelessWidget {
     required this.isLast,
   });
 
+  Future<void> _onTap(BuildContext context) async {
+    if (task.iconType == TaskIconType.locked) return;
+
+    final difficulty = await showQuizDifficultyDialog(context);
+    if (difficulty == null || !context.mounted) return;
+
+    context.push(
+      AppRoutes.taskDetails,
+      extra: {'task': task, 'difficulty': difficulty},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Color iconBgColor =
@@ -25,14 +40,19 @@ class TaskItemCard extends StatelessWidget {
     Color lineColor =
         task.isActive ? const Color(0xFF8E35E1) : const Color(0xFF3A4150);
 
+    final isLocked = task.iconType == TaskIconType.locked;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 16.w,
         right: 16.w,
         bottom: isLast ? 16.h : 0,
       ),
-      child: IntrinsicHeight(
-        child: Row(
+      child: InkWell(
+        onTap: isLocked ? null : () => _onTap(context),
+        borderRadius: BorderRadius.circular(16.r),
+        child: IntrinsicHeight(
+          child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
@@ -150,6 +170,7 @@ class TaskItemCard extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

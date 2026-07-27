@@ -9,6 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../view/main_nav_bar.dart';
 import '../view/home/home_screen.dart';
+import '../view/home/task_details_screen.dart';
+import '../models/task_item_model.dart';
+import '../view/home/widgets/quiz_difficulty_dialog.dart';
 import '../view/auth/splash_screen.dart';
 import '../view/auth/onboarding_screen.dart';
 import '../view/statistics/statistic_screen.dart';
@@ -54,6 +57,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.resetPassword,
       builder: (context, state) => const ResetPasswordScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.taskDetails,
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return TaskDetailsScreen(
+          task: extra?['task'] as TaskItemModel?,
+          difficulty: extra?['difficulty'] as QuizDifficulty?,
+        );
+      },
     ),
     ShellRoute(
       builder: (context, state, child) => MainNavBar(child: child),
