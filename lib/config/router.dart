@@ -11,6 +11,8 @@ import '../view/main_nav_bar.dart';
 import '../view/home/home_screen.dart';
 import '../view/auth/splash_screen.dart';
 import '../view/auth/onboarding_screen.dart';
+import '../view/statistics/statistic_screen.dart';
+import '../view/settings/settings_screen.dart';
 import 'router_path.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -59,6 +61,14 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.home,
           builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.statistics,
+          builder: (context, state) => const StatisticScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.settings,
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     ),
