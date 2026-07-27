@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,14 +14,18 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController;
+  late final Animation<double> _appBarAnimation;
+  late final Animation<double> _streakAnimation;
+  late final List<Animation<double>> _cardAnimations;
+
   late final List<TaskCategoryModel> _categories = [
     TaskCategoryModel(
       title: 'Easy',
       subtitle: 'Level 1 · Stories 3',
       totalTasks: 3,
       completedTasks: 3,
-      isExpanded: true,
       tasks: [
         TaskItemModel(
           title: 'Basic Greetings',
@@ -49,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
       completedTasks: 1,
       isPurple: true,
       textIcon: '2',
-      isExpanded: true,
       tasks: [
         TaskItemModel(
           title: 'Radio Interview: Climate',
@@ -88,6 +92,42 @@ class _HomeScreenState extends State<HomeScreen> {
       tasks: [],
     ),
   ];
+  final Map<String, bool> _expandedStates = {
+    'Medium': true,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _appBarAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.25, curve: Curves.easeOut),
+    );
+    _streakAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.15, 0.45, curve: Curves.easeOut),
+    );
+    _cardAnimations = List.generate(
+      _categories.length,
+      (i) => CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(0.3 + i * 0.12, 0.55 + i * 0.12, curve: Curves.easeOut),
+      ),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,9 +138,15 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               SizedBox(height: 54.h),
-              _buildAppBar(),
+              FadeScaleTransition(
+                animation: _appBarAnimation,
+                child: _buildAppBar(),
+              ),
               SizedBox(height: 24.h),
-              _buildStreakSection(),
+              FadeScaleTransition(
+                animation: _streakAnimation,
+                child: _buildStreakSection(),
+              ),
               SizedBox(height: 24.h),
               _buildTasksList(),
               SizedBox(height: 100.h),
@@ -242,13 +288,18 @@ class _HomeScreenState extends State<HomeScreen> {
         final category = _categories[index];
         return Padding(
           padding: EdgeInsets.only(bottom: 16.h),
-          child: TaskCategoryCard(
-            category: category,
-            onTap: () {
-              setState(() {
-                category.isExpanded = !category.isExpanded;
-              });
-            },
+          child: FadeScaleTransition(
+            animation: _cardAnimations[index],
+            child: TaskCategoryCard(
+              category: category,
+              isExpanded: _expandedStates[category.title] ?? false,
+              onTap: () {
+                setState(() {
+                  _expandedStates[category.title] =
+                      !(_expandedStates[category.title] ?? false);
+                });
+              },
+            ),
           ),
         );
       }),

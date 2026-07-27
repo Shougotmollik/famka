@@ -7,11 +7,13 @@ import 'task_item_card.dart';
 
 class TaskCategoryCard extends StatelessWidget {
   final TaskCategoryModel category;
+  final bool isExpanded;
   final VoidCallback onTap;
 
   const TaskCategoryCard({
     super.key,
     required this.category,
+    required this.isExpanded,
     required this.onTap,
   });
 
@@ -27,7 +29,7 @@ class TaskCategoryCard extends StatelessWidget {
         color: const Color(0xFF232832),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: category.isExpanded
+          color: isExpanded
               ? const Color(0xFF8E35E1)
               : const Color(0xFF3A4150),
           width: 1.w,
@@ -83,7 +85,7 @@ class TaskCategoryCard extends StatelessWidget {
                   ),
                   SizedBox(width: 8.w),
                   AnimatedRotation(
-                    turns: category.isExpanded ? 0.5 : 0.0,
+                    turns: isExpanded ? 0.5 : 0.0,
                     duration: const Duration(milliseconds: 300),
                     child: Icon(
                       Icons.keyboard_arrow_down_rounded,
@@ -107,7 +109,7 @@ class TaskCategoryCard extends StatelessWidget {
                 );
               }),
             ),
-            crossFadeState: category.isExpanded
+            crossFadeState: isExpanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 300),
