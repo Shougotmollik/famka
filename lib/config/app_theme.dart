@@ -20,6 +20,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: c,
+      fontFamily: 'Poppins',
       scaffoldBackgroundColor: c.surface,
       cardTheme: CardThemeData(
         elevation: 0,
