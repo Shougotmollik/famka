@@ -5,8 +5,10 @@ import 'package:famka/view/auth/register_screen.dart';
 import 'package:famka/view/auth/register_verification_screen.dart';
 import 'package:famka/view/auth/reset_password_screen.dart';
 import 'package:famka/view/auth/upload_profile_image_screen.dart';
+import 'package:famka/view/home/session_result_screen.dart';
 import 'package:famka/view/home/session_screen.dart';
 import 'package:famka/view/home/quiz_screen.dart';
+import 'package:famka/view/notification/notification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../view/main_nav_bar.dart';
@@ -77,6 +79,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.quiz,
       builder: (context, state) => const QuizScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.quizResult,
+      builder: (context, state) => const SessionResultScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.notification,
+      builder: (context, state) => NotificationScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainNavBar(child: child),

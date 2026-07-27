@@ -15,4 +15,6 @@ class AppRoutes {
   static const String statistics = '/statistics';
   static const String settings = '/settings';
   static const String quiz = '/quiz';
+  static const String quizResult = '/quizResult';
+  static const String notification = "/notification";
 }

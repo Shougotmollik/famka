@@ -1,7 +1,9 @@
 import 'package:animations/animations.dart';
+import 'package:famka/config/router_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/task_category_model.dart';
 import '../../models/task_item_model.dart';
 import 'widgets/task_category_card.dart';
@@ -14,7 +16,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<double> _appBarAnimation;
   late final Animation<double> _streakAnimation;
@@ -92,9 +95,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       tasks: [],
     ),
   ];
-  final Map<String, bool> _expandedStates = {
-    'Medium': true,
-  };
+  final Map<String, bool> _expandedStates = {'Medium': true};
 
   @override
   void initState() {
@@ -269,14 +270,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
 
         Spacer(),
-        Container(
-          padding: EdgeInsets.all(8.r),
-          decoration: BoxDecoration(
-            color: Color(0XFF_1F242B),
-            borderRadius: BorderRadius.circular(100.r),
-            border: Border.all(color: Color(0XFF_3A4150)),
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.notification),
+          child: Container(
+            padding: EdgeInsets.all(8.r),
+            decoration: BoxDecoration(
+              color: Color(0XFF_1F242B),
+              borderRadius: BorderRadius.circular(100.r),
+              border: Border.all(color: Color(0XFF_3A4150)),
+            ),
+            child: SvgPicture.asset("assets/icons/Bell.svg"),
           ),
-          child: SvgPicture.asset("assets/icons/Bell.svg"),
         ),
       ],
     );
