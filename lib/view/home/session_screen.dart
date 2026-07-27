@@ -2,7 +2,8 @@ import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:famka/config/app_colors.dart';
-import 'package:famka/view/home/widgets/quiz_difficulty_dialog.dart';
+import 'package:go_router/go_router.dart';
+import 'package:famka/config/router_path.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -411,16 +412,8 @@ class _SessionScreenState extends State<SessionScreen>
     );
   }
 
-  Future<void> _onQuizTap() async {
-    final difficulty = await showQuizDifficultyDialog(context);
-    if (difficulty != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Starting quiz: ${difficulty.label}'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+  void _onQuizTap() {
+    context.push(AppRoutes.quiz);
   }
 
   Widget _buildQuizButton() {
