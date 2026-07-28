@@ -17,4 +17,6 @@ class AppRoutes {
   static const String quiz = '/quiz';
   static const String quizResult = '/quizResult';
   static const String notification = "/notification";
+  static const String privacyPolicy = "/privacyPolicy";
+  static const String termsCondition = "/termsCondition";
 }

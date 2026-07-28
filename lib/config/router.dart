@@ -1,3 +1,5 @@
+import 'package:famka/view/settings/privacy_policy_screen.dart';
+import 'package:famka/view/settings/terms_condition_screen.dart';
 import 'package:famka/view/auth/forgot_password_screen.dart';
 import 'package:famka/view/auth/forgot_verification_screen.dart';
 import 'package:famka/view/auth/log_in_screen.dart';
@@ -87,6 +89,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.notification,
       builder: (context, state) => NotificationScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.privacyPolicy,
+      builder: (context, state) => const PrivacyPolicyScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.termsCondition,
+      builder: (context, state) => const TermsConditionScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => MainNavBar(child: child),
