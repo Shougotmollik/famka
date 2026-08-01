@@ -1,4 +1,4 @@
-import 'package:famka/config/router_path.dart';
+import 'package:famka/config/routes/router_path.dart';
 import 'package:famka/utils/form_validator.dart';
 import 'package:famka/view/widgets/social_button.dart';
 import 'package:flutter/material.dart';

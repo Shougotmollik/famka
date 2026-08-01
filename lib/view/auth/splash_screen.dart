@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../config/router_path.dart';
+import '../../config/routes/router_path.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

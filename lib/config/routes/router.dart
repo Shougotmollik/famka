@@ -13,15 +13,15 @@ import 'package:famka/view/home/quiz_screen.dart';
 import 'package:famka/view/notification/notification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../view/main_nav_bar.dart';
-import '../view/home/home_screen.dart';
-import '../view/home/task_details_screen.dart';
-import '../models/task_item_model.dart';
-import '../view/home/widgets/quiz_difficulty_dialog.dart';
-import '../view/auth/splash_screen.dart';
-import '../view/auth/onboarding_screen.dart';
-import '../view/statistics/statistic_screen.dart';
-import '../view/settings/settings_screen.dart';
+import '../../view/main_nav_bar.dart';
+import '../../view/home/home_screen.dart';
+import '../../view/home/task_details_screen.dart';
+import '../../models/task_item_model.dart';
+import '../../view/home/widgets/quiz_difficulty_dialog.dart';
+import '../../view/auth/splash_screen.dart';
+import '../../view/auth/onboarding_screen.dart';
+import '../../view/statistics/statistic_screen.dart';
+import '../../view/settings/settings_screen.dart';
 import 'router_path.dart';
 
 final GoRouter appRouter = GoRouter(

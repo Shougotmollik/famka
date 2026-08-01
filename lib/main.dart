@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'config/app_theme.dart';
-import 'config/router.dart';
+import 'config/theme/app_theme.dart';
+import 'config/routes/router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

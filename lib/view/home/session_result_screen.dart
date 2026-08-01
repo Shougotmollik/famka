@@ -1,5 +1,5 @@
-import 'package:famka/config/app_colors.dart';
-import 'package:famka/config/router_path.dart';
+import 'package:famka/config/theme/app_colors.dart';
+import 'package:famka/config/routes/router_path.dart';
 import 'package:famka/view/widgets/custom_elevated_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

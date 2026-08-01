@@ -1,5 +1,5 @@
 import 'package:animations/animations.dart';
-import 'package:famka/config/router_path.dart';
+import 'package:famka/config/routes/router_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';

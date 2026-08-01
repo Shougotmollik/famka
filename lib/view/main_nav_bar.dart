@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import '../config/router_path.dart';
+import '../config/routes/router_path.dart';
 
 class MainNavBar extends StatelessWidget {
   const MainNavBar({super.key, required this.child});

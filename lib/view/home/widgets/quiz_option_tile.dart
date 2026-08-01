@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../config/app_colors.dart';
+import '../../../config/theme/app_colors.dart';
 
 enum QuizOptionState { idle, correct, incorrect }
 

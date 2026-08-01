@@ -1,4 +1,4 @@
-import 'package:famka/config/router_path.dart';
+import 'package:famka/config/routes/router_path.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -10,11 +10,7 @@ class TaskDetailsScreen extends StatelessWidget {
   final TaskItemModel? task;
   final QuizDifficulty? difficulty;
 
-  const TaskDetailsScreen({
-    super.key,
-    this.task,
-    this.difficulty,
-  });
+  const TaskDetailsScreen({super.key, this.task, this.difficulty});
 
   static const _gradientTop = Color(0xFF241B35);
   static const _gradientBottom = Color(0xFF12151C);
@@ -62,7 +58,9 @@ class TaskDetailsScreen extends StatelessWidget {
       caseSensitive: false,
     ).firstMatch(task?.subtitle ?? '');
 
-    final story = storyMatch != null ? 'STORY ${storyMatch.group(1)}' : 'STORY 1';
+    final story = storyMatch != null
+        ? 'STORY ${storyMatch.group(1)}'
+        : 'STORY 1';
     return '$level • $story';
   }
 
@@ -76,9 +74,7 @@ class TaskDetailsScreen extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: DecoratedBox(
-              decoration: _screenBackgroundDecoration,
-            ),
+            child: DecoratedBox(decoration: _screenBackgroundDecoration),
           ),
           SafeArea(
             child: Column(
@@ -124,7 +120,11 @@ class TaskDetailsScreen extends StatelessWidget {
                           title: 'Before You Start',
                           child: Column(
                             children: [
-                              for (var i = 0; i < _beforeYouStartItems.length; i++) ...[
+                              for (
+                                var i = 0;
+                                i < _beforeYouStartItems.length;
+                                i++
+                              ) ...[
                                 if (i > 0) SizedBox(height: 14.h),
                                 _ChecklistItem(
                                   text: _beforeYouStartItems[i],
@@ -135,19 +135,18 @@ class TaskDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 24.h),
-                               _StartListeningButton(
-                                 onPressed: () {
-                                  context.push(AppRoutes.session);
-                                 },
-                                 primaryColor: c.primary,
-                                 textColor: c.onPrimary,
-                               ),
-                               SizedBox(height: 24.h),
+                        _StartListeningButton(
+                          onPressed: () {
+                            context.push(AppRoutes.session);
+                          },
+                          primaryColor: c.primary,
+                          textColor: c.onPrimary,
+                        ),
+                        SizedBox(height: 24.h),
                       ],
                     ),
                   ),
                 ),
-         
               ],
             ),
           ),
@@ -186,10 +185,7 @@ class _BackButton extends StatelessWidget {
 }
 
 class _LevelBadge extends StatelessWidget {
-  const _LevelBadge({
-    required this.label,
-    required this.color,
-  });
+  const _LevelBadge({required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -216,10 +212,7 @@ class _LevelBadge extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.title,
-    required this.child,
-  });
+  const _InfoCard({required this.title, required this.child});
 
   final String title;
   final Widget child;
@@ -234,9 +227,7 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF262B35),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: c.outlineVariant.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: c.outlineVariant.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,10 +249,7 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _ChecklistItem extends StatelessWidget {
-  const _ChecklistItem({
-    required this.text,
-    required this.accentColor,
-  });
+  const _ChecklistItem({required this.text, required this.accentColor});
 
   final String text;
   final Color accentColor;
@@ -328,11 +316,7 @@ class _StartListeningButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.play_arrow_outlined,
-              size: 24.sp,
-              color: textColor,
-            ),
+            Icon(Icons.play_arrow_outlined, size: 24.sp, color: textColor),
             Text(
               'Start listening',
               style: TextStyle(

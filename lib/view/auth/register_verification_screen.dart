@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
-import '../../config/router_path.dart';
+import '../../config/routes/router_path.dart';
 import '../widgets/custom_elevated_button.dart';
 
 class RegisterVerificationScreen extends StatefulWidget {

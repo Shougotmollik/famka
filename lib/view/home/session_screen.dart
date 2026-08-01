@@ -1,9 +1,9 @@
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:famka/config/app_colors.dart';
+import 'package:famka/config/theme/app_colors.dart';
 import 'package:go_router/go_router.dart';
-import 'package:famka/config/router_path.dart';
+import 'package:famka/config/routes/router_path.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
