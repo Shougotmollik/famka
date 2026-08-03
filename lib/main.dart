@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'config/theme/app_theme.dart';
 import 'config/routes/router.dart';
@@ -18,7 +19,7 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
-  runApp(const FamkaApp());
+  runApp(const ProviderScope(child: FamkaApp()));
 }
 
 class FamkaApp extends StatelessWidget {

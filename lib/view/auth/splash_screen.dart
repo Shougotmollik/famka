@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/routes/router_path.dart';
+import '../../services/local_storage.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,8 +40,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) context.go(AppRoutes.onBoarding);
+    Future.delayed(const Duration(milliseconds: 1800), () async {
+      if (!mounted) return;
+
+      // Already signed in? Skip onboarding and go straight home.
+      final token = await LocalStorage.access_token.get();
+      if (!mounted) return;
+
+      final hasToken = token != null && token.isNotEmpty;
+      context.go(hasToken ? AppRoutes.home : AppRoutes.onBoarding);
     });
   }
 

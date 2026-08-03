@@ -1,5 +1,7 @@
 import 'package:famka/config/routes/router_path.dart';
+import 'package:famka/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'widgets/logout_dialog.dart';
@@ -8,14 +10,14 @@ import 'widgets/settings_section.dart';
 import 'widgets/settings_tile.dart';
 import 'widgets/time_picker_dialog.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _pushNotifications = true;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
 
@@ -130,8 +132,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _onLogout() {
     LogoutDialog.show(
       context,
-      onConfirm: () {
-        context.go(AppRoutes.logIn);
+      onConfirm: () async {
+        await ref.read(authProvider.notifier).logout();
+        if (mounted) context.go(AppRoutes.logIn);
       },
     );
   }

@@ -1,23 +1,28 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/routes/router_path.dart';
+import '../../provider/user_provider.dart';
+import '../../utils/app_snackbar.dart';
 import '../../utils/image_picker.dart';
 import '../widgets/custom_elevated_button.dart';
 
-class UploadProfileImageScreen extends StatefulWidget {
+class UploadProfileImageScreen extends ConsumerStatefulWidget {
   const UploadProfileImageScreen({super.key});
 
   @override
-  State<UploadProfileImageScreen> createState() =>
+  ConsumerState<UploadProfileImageScreen> createState() =>
       _UploadProfileImageScreenState();
 }
 
-class _UploadProfileImageScreenState extends State<UploadProfileImageScreen> {
+class _UploadProfileImageScreenState
+    extends ConsumerState<UploadProfileImageScreen> {
   File? _selectedImage;
+  bool _isUploading = false;
 
   void _pickImage() {
     showImagePickerOptions(context, (source) async {
@@ -30,6 +35,39 @@ class _UploadProfileImageScreenState extends State<UploadProfileImageScreen> {
         setState(() => _selectedImage = file);
       }
     });
+  }
+
+  Future<void> _handleUpload() async {
+    final image = _selectedImage;
+    if (image == null) {
+      AppSnackbar.show(
+        message: 'Please select a profile picture first',
+        type: SnackType.warning,
+      );
+      return;
+    }
+
+    setState(() => _isUploading = true);
+    try {
+      final success = await ref
+          .read(userProvider.notifier)
+          .updateProfile(profileImage: image);
+      if (!mounted) return;
+      if (success) {
+        AppSnackbar.show(
+          message: 'Profile picture updated successfully',
+          type: SnackType.success,
+        );
+        context.go(AppRoutes.home);
+      } else {
+        AppSnackbar.show(
+          message: 'Could not update profile picture. Please try again.',
+          type: SnackType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
   }
 
   @override
@@ -112,10 +150,11 @@ class _UploadProfileImageScreenState extends State<UploadProfileImageScreen> {
               const Spacer(),
 
               CustomElevatedButton(
-                onPressed: () => context.go(AppRoutes.home),
+                onPressed: _handleUpload,
                 title: 'Upload',
                 color: c.primary,
                 textColor: Colors.white,
+                isLoading: _isUploading,
               ),
 
               SizedBox(height: 16.h),

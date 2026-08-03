@@ -17,12 +17,32 @@ class LocalStorage {
   static _localStorageUserName user_name = _localStorageUserName();
   static _localStorageIsEmailVerified is_email_verified =
       _localStorageIsEmailVerified();
+  static _localStorageRememberedEmail remembered_email =
+      _localStorageRememberedEmail();
 
   static _localStorageCookie cookie = _localStorageCookie();
   static _localStorageOnboarding onboarding = _localStorageOnboarding();
   static Future<bool> clear() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     return localStorage.clear();
+  }
+
+  /// Clears all auth/session data but keeps preferences like the
+  /// remembered login email and the onboarding flag.
+  static Future<void> clearAuth() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    await Future.wait([
+      localStorage.remove(_localStorageAccessToken.key),
+      localStorage.remove(_localStorageAccessTokenValidTill.key),
+      localStorage.remove(_localStorageRefreshToken.key),
+      localStorage.remove(_localStorageRole.key),
+      localStorage.remove(_localStorageUserId.key),
+      localStorage.remove(_localStorageFullName.key),
+      localStorage.remove(_localStorageIsProfileCompleted.key),
+      localStorage.remove(_localStorageUserEmail.key),
+      localStorage.remove(_localStorageUserName.key),
+      localStorage.remove(_localStorageIsEmailVerified.key),
+    ]);
   }
 }
 
@@ -166,6 +186,25 @@ class _localStorageUserName {
   Future<String?> get() async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     return localStorage.getString(_localStorageUserName.key);
+  }
+}
+
+class _localStorageRememberedEmail {
+  static const String key = 'remembered_email';
+
+  Future<bool> set(String value) async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    return localStorage.setString(_localStorageRememberedEmail.key, value);
+  }
+
+  Future<String?> get() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    return localStorage.getString(_localStorageRememberedEmail.key);
+  }
+
+  Future<bool> remove() async {
+    SharedPreferences localStorage = await SharedPreferences.getInstance();
+    return localStorage.remove(_localStorageRememberedEmail.key);
   }
 }
 

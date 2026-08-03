@@ -1,25 +1,71 @@
 import 'package:famka/config/routes/router_path.dart';
+import 'package:famka/provider/auth_provider.dart';
+import 'package:famka/services/local_storage.dart';
+import 'package:famka/utils/app_snackbar.dart';
 import 'package:famka/utils/form_validator.dart';
 import 'package:famka/view/widgets/social_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/auth_text_form_field.dart';
 import '../widgets/custom_elevated_button.dart';
 
-class LogInScreen extends StatefulWidget {
+class LogInScreen extends ConsumerStatefulWidget {
   const LogInScreen({super.key});
 
   @override
-  State<LogInScreen> createState() => _LogInScreenState();
+  ConsumerState<LogInScreen> createState() => _LogInScreenState();
 }
 
-class _LogInScreenState extends State<LogInScreen> {
+class _LogInScreenState extends ConsumerState<LogInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _rememberMe = false;
+  bool _isLoading = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedEmail();
+  }
+
+  Future<void> _loadRememberedEmail() async {
+    final email = await LocalStorage.remembered_email.get();
+    if (!mounted || email == null || email.isEmpty) return;
+    setState(() {
+      _emailController.text = email;
+      _rememberMe = true;
+    });
+  }
+
+  Future<void> _handleLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final email = _emailController.text.trim();
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authProvider.notifier).logIn(
+            email: email,
+            password: _passwordController.text,
+          );
+      // Persist the email only while Remember Me is checked.
+      if (_rememberMe) {
+        await LocalStorage.remembered_email.set(email);
+      } else {
+        await LocalStorage.remembered_email.remove();
+      }
+      if (mounted) context.go(AppRoutes.home);
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(message: '$e', type: SnackType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
   @override
   void dispose() {
     _emailController.dispose();
@@ -106,6 +152,7 @@ class _LogInScreenState extends State<LogInScreen> {
                   hintText: 'Enter Password',
                   controller: _passwordController,
                   isPassword: true,
+                  validator: FormValidator.validatePassword,
                 ),
 
                 Row(
@@ -158,15 +205,11 @@ class _LogInScreenState extends State<LogInScreen> {
                 SizedBox(height: 32.h),
 
                 CustomElevatedButton(
-                  onPressed: () {
-                    FormValidator.validateAndProceed(
-                      _formKey,
-                      () => context.go(AppRoutes.home),
-                    );
-                  },
+                  onPressed: _handleLogin,
                   title: 'Log In',
                   color: c.primary,
                   textColor: c.onPrimary,
+                  isLoading: _isLoading,
                 ),
 
                 SizedBox(height: 16.h),

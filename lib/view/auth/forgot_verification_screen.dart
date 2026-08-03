@@ -1,25 +1,33 @@
 import 'dart:async';
 
+import 'package:famka/provider/auth_provider.dart';
+import 'package:famka/utils/app_snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 import '../../config/routes/router_path.dart';
 import '../widgets/custom_elevated_button.dart';
 
-class ForgotVerificationScreen extends StatefulWidget {
-  const ForgotVerificationScreen({super.key});
+class ForgotVerificationScreen extends ConsumerStatefulWidget {
+  const ForgotVerificationScreen({super.key, this.args});
+
+  /// Data passed from the forgot-password screen (user_id, email).
+  final Map<String, dynamic>? args;
 
   @override
-  State<ForgotVerificationScreen> createState() =>
+  ConsumerState<ForgotVerificationScreen> createState() =>
       _ForgotVerificationScreenState();
 }
 
-class _ForgotVerificationScreenState extends State<ForgotVerificationScreen> {
+class _ForgotVerificationScreenState
+    extends ConsumerState<ForgotVerificationScreen> {
   final TextEditingController _pinController = TextEditingController();
   Timer? _countdownTimer;
   int _remainingSeconds = 41;
   bool _isResending = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -46,16 +54,77 @@ class _ForgotVerificationScreenState extends State<ForgotVerificationScreen> {
     });
   }
 
-  Future<void> _resendOtp() async {
+  Future<void> _resendOtp(Map<String, dynamic>? args) async {
+    final userId = args?['user_id'] as String?;
+    if (userId == null || userId.isEmpty) {
+      AppSnackbar.show(
+        message: 'Account details missing. Please start over.',
+        type: SnackType.error,
+      );
+      return;
+    }
+
     setState(() => _isResending = true);
+    try {
+      await ref.read(authProvider.notifier).resendOtp(
+            userId: userId,
+            purpose: 'RESET_PASSWORD',
+          );
+      if (!mounted) return;
+      _pinController.clear();
+      _startCountdown();
+      AppSnackbar.show(
+        message: 'Verification code sent',
+        type: SnackType.success,
+      );
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(message: '$e', type: SnackType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
+  }
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+  Future<void> _verifyCode(Map<String, dynamic>? args) async {
+    final userId = args?['user_id'] as String?;
+    final code = _pinController.text.trim();
 
-    if (!mounted) return;
-    setState(() => _isResending = false);
-    _pinController.clear();
-    _startCountdown();
+    if (userId == null || userId.isEmpty) {
+      AppSnackbar.show(
+        message: 'Session expired. Please start over.',
+        type: SnackType.error,
+      );
+      return;
+    }
+    if (code.length != 6) {
+      AppSnackbar.show(
+        message: 'Please enter the 6-digit verification code',
+        type: SnackType.warning,
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final result = await ref
+          .read(authProvider.notifier)
+          .verifyResetCode(userId: userId, code: code);
+      if (!mounted) return;
+      context.push(
+        AppRoutes.resetPassword,
+        extra: {
+          'reset_token': result['reset_token'],
+          'user_id': result['user_id'],
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(message: '$e', type: SnackType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   String get _formattedTime {
@@ -96,6 +165,8 @@ class _ForgotVerificationScreenState extends State<ForgotVerificationScreen> {
       ),
     );
 
+    final userEmail = widget.args?['email'] as String? ?? 'example@gmail.com';
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -120,7 +191,7 @@ class _ForgotVerificationScreenState extends State<ForgotVerificationScreen> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'example@gmail.com',
+                userEmail,
                 style: TextStyle(fontSize: 14.sp, color: primaryColor),
               ),
               SizedBox(height: 40.h),
@@ -131,14 +202,14 @@ class _ForgotVerificationScreenState extends State<ForgotVerificationScreen> {
                 focusedPinTheme: focusedPinTheme,
                 submittedPinTheme: submittedPinTheme,
                 showCursor: true,
-                onCompleted: (pin) => print(pin),
               ),
               SizedBox(height: 40.h),
               CustomElevatedButton(
-                onPressed: () => context.push(AppRoutes.resetPassword),
+                onPressed: () => _verifyCode(widget.args),
                 title: 'Verify',
                 color: primaryColor,
                 textColor: Colors.white,
+                isLoading: _isLoading,
               ),
               SizedBox(height: 20.h),
 
@@ -190,7 +261,7 @@ class _ForgotVerificationScreenState extends State<ForgotVerificationScreen> {
                 )
               else
                 GestureDetector(
-                  onTap: _resendOtp,
+                  onTap: () => _resendOtp(widget.args),
                   child: RichText(
                     text: TextSpan(
                       text: "Didn't get the code? ",

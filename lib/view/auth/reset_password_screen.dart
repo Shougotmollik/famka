@@ -1,29 +1,76 @@
+import 'package:famka/provider/auth_provider.dart';
+import 'package:famka/utils/app_snackbar.dart';
 import 'package:famka/utils/form_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/routes/router_path.dart';
 import '../widgets/auth_text_form_field.dart';
 import '../widgets/custom_elevated_button.dart';
 
-class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+class ResetPasswordScreen extends ConsumerStatefulWidget {
+  const ResetPasswordScreen({super.key, this.args});
+
+  /// Data passed from the verification screen (reset_token, user_id).
+  final Map<String, dynamic>? args;
 
   @override
-  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleReset(Map<String, dynamic>? args) async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final userId = args?['user_id'] as String?;
+    final resetToken = args?['reset_token'] as String?;
+    if (userId == null || resetToken == null) {
+      AppSnackbar.show(
+        message: 'Session expired. Please start the reset process again.',
+        type: SnackType.error,
+      );
+      if (mounted) context.go(AppRoutes.forgotPassword);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .resetPassword(
+            userId: userId,
+            resetToken: resetToken,
+            password: _newPasswordController.text,
+            confirmPassword: _confirmPasswordController.text,
+          );
+      if (!mounted) return;
+      AppSnackbar.show(
+        message: 'Password reset successfully. Please sign in.',
+        type: SnackType.success,
+      );
+      context.go(AppRoutes.logIn);
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(message: '$e', type: SnackType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -102,15 +149,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 SizedBox(height: 40.h),
 
                 CustomElevatedButton(
-                  onPressed: () {
-                    FormValidator.validateAndProceed(
-                      _formKey,
-                      () => context.go(AppRoutes.logIn),
-                    );
-                  },
+                  onPressed: () => _handleReset(widget.args),
                   title: 'Reset Password',
                   color: c.primary,
                   textColor: c.onPrimary,
+                  isLoading: _isLoading,
                 ),
               ],
             ),

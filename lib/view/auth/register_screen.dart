@@ -1,8 +1,11 @@
 import 'package:famka/config/theme/app_colors.dart';
+import 'package:famka/provider/auth_provider.dart';
+import 'package:famka/utils/app_snackbar.dart';
 import 'package:famka/utils/form_validator.dart';
 import 'package:famka/view/widgets/social_button.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -10,20 +13,21 @@ import '../../config/routes/router_path.dart';
 import '../widgets/auth_text_form_field.dart';
 import '../widgets/custom_elevated_button.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   bool _agreed = false;
+  bool _isLoading = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
@@ -33,6 +37,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    if (!_agreed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please agree to the terms and conditions',
+            style: TextStyle(color: AppColors.onPrimary),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final email = _emailController.text.trim();
+    setState(() => _isLoading = true);
+    try {
+      final result = await ref
+          .read(authProvider.notifier)
+          .signUp(
+            fullName: _nameController.text.trim(),
+            email: email,
+            password: _passwordController.text,
+            confirmPassword: _confirmPasswordController.text,
+            isTermsAndConditionsAccepted: _agreed,
+          );
+      if (!mounted) return;
+      context.push(
+        AppRoutes.registerVerification,
+        extra: {
+          'user_id': result['user_id'],
+          'email': email,
+        },
+      );
+      _passwordController.clear();
+      _confirmPasswordController.clear();
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(message: '$e', type: SnackType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -212,29 +263,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(height: 32.h),
 
                 CustomElevatedButton(
-                  onPressed: () {
-                    if (!_agreed) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text(
-                            'Please agree to the terms and conditions',
-                            style: TextStyle(color: AppColors.onPrimary),
-                          ),
-                          backgroundColor: c.primary,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                      return;
-                    }
-
-                    FormValidator.validateAndProceed(
-                      _formKey,
-                      () => context.go(AppRoutes.registerVerification),
-                    );
-                  },
+                  onPressed: _handleRegister,
                   title: 'Register',
                   color: c.primary,
                   textColor: c.onPrimary,
+                  isLoading: _isLoading,
                 ),
 
                 SizedBox(height: 16.h),

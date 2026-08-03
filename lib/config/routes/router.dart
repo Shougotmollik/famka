@@ -46,7 +46,9 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.registerVerification,
-      builder: (context, state) => RegisterVerificationScreen(),
+      builder: (context, state) => RegisterVerificationScreen(
+        args: state.extra as Map<String, dynamic>?,
+      ),
     ),
     GoRoute(
       path: AppRoutes.uploadProfileImage,
@@ -58,11 +60,15 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.forgotVerification,
-      builder: (context, state) => const ForgotVerificationScreen(),
+      builder: (context, state) => ForgotVerificationScreen(
+        args: state.extra as Map<String, dynamic>?,
+      ),
     ),
     GoRoute(
       path: AppRoutes.resetPassword,
-      builder: (context, state) => const ResetPasswordScreen(),
+      builder: (context, state) => ResetPasswordScreen(
+        args: state.extra as Map<String, dynamic>?,
+      ),
     ),
     GoRoute(
       path: AppRoutes.taskDetails,

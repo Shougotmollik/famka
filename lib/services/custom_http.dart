@@ -421,14 +421,14 @@ class CustomHttp {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({'refresh_token': refreshToken}),
+        body: jsonEncode({'refresh': refreshToken}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)['data'];
         if (data != null) {
-          await LocalStorage.access_token.set(data['access_token']);
-          await LocalStorage.refresh_token.set(data['refresh_token']);
+          await LocalStorage.access_token.set(data['access']);
+          await LocalStorage.refresh_token.set(data['refresh']);
           return true;
         }
       }

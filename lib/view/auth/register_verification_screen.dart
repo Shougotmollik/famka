@@ -1,26 +1,33 @@
 import 'dart:async';
 
+import 'package:famka/provider/auth_provider.dart';
+import 'package:famka/utils/app_snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 import '../../config/routes/router_path.dart';
 import '../widgets/custom_elevated_button.dart';
 
-class RegisterVerificationScreen extends StatefulWidget {
-  const RegisterVerificationScreen({super.key});
+class RegisterVerificationScreen extends ConsumerStatefulWidget {
+  const RegisterVerificationScreen({super.key, this.args});
+
+  /// Data passed from the register screen (user_id, email, password).
+  final Map<String, dynamic>? args;
 
   @override
-  State<RegisterVerificationScreen> createState() =>
+  ConsumerState<RegisterVerificationScreen> createState() =>
       _RegisterVerificationScreenState();
 }
 
 class _RegisterVerificationScreenState
-    extends State<RegisterVerificationScreen> {
+    extends ConsumerState<RegisterVerificationScreen> {
   final TextEditingController _pinController = TextEditingController();
   Timer? _countdownTimer;
   int _remainingSeconds = 41;
   bool _isResending = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -47,16 +54,72 @@ class _RegisterVerificationScreenState
     });
   }
 
-  Future<void> _resendOtp() async {
+  Future<void> _resendOtp(Map<String, dynamic>? args) async {
+    final userId = args?['user_id'] as String?;
+    if (userId == null || userId.isEmpty) {
+      AppSnackbar.show(
+        message: 'Account details missing. Please register again.',
+        type: SnackType.error,
+      );
+      return;
+    }
+
     setState(() => _isResending = true);
+    try {
+      await ref.read(authProvider.notifier).resendOtp(
+            userId: userId,
+            purpose: 'SIGNUP',
+          );
+      if (!mounted) return;
+      _pinController.clear();
+      _startCountdown();
+      AppSnackbar.show(
+        message: 'Verification code sent',
+        type: SnackType.success,
+      );
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(message: '$e', type: SnackType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
+  }
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+  Future<void> _verifyCode(Map<String, dynamic>? args) async {
+    final userId = args?['user_id'] as String?;
+    final code = _pinController.text.trim();
 
-    if (!mounted) return;
-    setState(() => _isResending = false);
-    _pinController.clear();
-    _startCountdown();
+    if (userId == null || userId.isEmpty) {
+      AppSnackbar.show(
+        message: 'Session expired. Please register again.',
+        type: SnackType.error,
+      );
+      return;
+    }
+    if (code.length != 6) {
+      AppSnackbar.show(
+        message: 'Please enter the 6-digit verification code',
+        type: SnackType.warning,
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authProvider.notifier).verifySignUpOtp(
+            userId: userId,
+            otp: code,
+          );
+      if (!mounted) return;
+      context.go(AppRoutes.uploadProfileImage);
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.show(message: '$e', type: SnackType.error);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   String get _formattedTime {
@@ -97,6 +160,8 @@ class _RegisterVerificationScreenState
       ),
     );
 
+    final userEmail = widget.args?['email'] as String? ?? 'example@gmail.com';
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -115,13 +180,13 @@ class _RegisterVerificationScreenState
               ),
               SizedBox(height: 12.h),
               Text(
-                'Please enter the four verification code we sent to',
+                'Please enter the 6-digit verification code we sent to',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14.sp, color: Colors.grey.shade400),
               ),
               SizedBox(height: 8.h),
               Text(
-                'example@gmail.com',
+                userEmail,
                 style: TextStyle(fontSize: 14.sp, color: primaryColor),
               ),
               SizedBox(height: 40.h),
@@ -132,14 +197,14 @@ class _RegisterVerificationScreenState
                 focusedPinTheme: focusedPinTheme,
                 submittedPinTheme: submittedPinTheme,
                 showCursor: true,
-                onCompleted: (pin) => print(pin),
               ),
               SizedBox(height: 40.h),
               CustomElevatedButton(
-                onPressed: () => context.go(AppRoutes.uploadProfileImage),
+                onPressed: () => _verifyCode(widget.args),
                 title: 'Verify',
                 color: primaryColor,
                 textColor: Colors.white,
+                isLoading: _isLoading,
               ),
               SizedBox(height: 20.h),
 
@@ -191,7 +256,7 @@ class _RegisterVerificationScreenState
                 )
               else
                 GestureDetector(
-                  onTap: _resendOtp,
+                  onTap: () => _resendOtp(widget.args),
                   child: RichText(
                     text: TextSpan(
                       text: "Didn't get the email? ",
