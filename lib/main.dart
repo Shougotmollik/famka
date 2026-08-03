@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'config/theme/app_theme.dart';
 import 'config/routes/router.dart';
+import 'utils/app_snackbar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ class FamkaApp extends StatelessWidget {
         return MaterialApp.router(
           title: 'famka',
           debugShowCheckedModeBanner: false,
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
           theme: AppTheme.darkTheme,
           routerConfig: appRouter,
         );

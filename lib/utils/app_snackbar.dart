@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../config/theme/app_colors.dart';
 
 /// =============================================================
 /// GLOBAL SCAFFOLD MESSENGER KEY
@@ -47,29 +48,33 @@ class SnackConfig {
 class SnackTheme {
   static const double iconSize = 22;
 
+  /// Dark surface slightly lighter than [AppColors.bgColor] so the
+  /// snackbar reads as elevated content over the app's dark theme.
+  static const Color _surface = Color(0xFF252B34);
+
   static final Map<SnackType, SnackConfig> configs = {
     SnackType.success: SnackConfig(
-      primaryColor: Color(0xFF2E7D32),
-      backgroundColor: Color(0xFFE8F5E9),
-      textColor: Color(0xFF1B5E20),
+      primaryColor: AppColors.success,
+      backgroundColor: _surface,
+      textColor: AppColors.primaryText,
       svg: SnackIcons.success,
     ),
     SnackType.error: SnackConfig(
-      primaryColor: Color(0xFFD32F2F),
-      backgroundColor: Color(0xFFFFEBEE),
-      textColor: Color(0xFFB71C1C),
+      primaryColor: AppColors.error,
+      backgroundColor: _surface,
+      textColor: AppColors.primaryText,
       svg: SnackIcons.warning,
     ),
     SnackType.warning: SnackConfig(
-      primaryColor: Color(0xFFF57C00),
-      backgroundColor: Color(0xFFFFF3E0),
-      textColor: Color(0xFFE65100),
+      primaryColor: AppColors.warning,
+      backgroundColor: _surface,
+      textColor: AppColors.primaryText,
       svg: SnackIcons.warning,
     ),
     SnackType.info: SnackConfig(
-      primaryColor: Color(0xFF8200DB),
-      backgroundColor: Color(0xFFffffff),
-      textColor: Color(0xFF8200DB),
+      primaryColor: AppColors.primary,
+      backgroundColor: _surface,
+      textColor: AppColors.primaryText,
       svg: SnackIcons.info,
     ),
   };
@@ -150,7 +155,7 @@ class _CustomSnackbarState extends State<CustomSnackbar>
         child: Material(
           color: Colors.transparent,
           elevation: 6,
-          shadowColor: Colors.black.withValues(alpha: 0.15),
+          shadowColor: Colors.black.withValues(alpha: 0.35),
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -162,7 +167,7 @@ class _CustomSnackbarState extends State<CustomSnackbar>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: config.primaryColor.withValues(alpha: 0.12),
+                  color: config.primaryColor.withValues(alpha: 0.18),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
