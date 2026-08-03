@@ -8,4 +8,6 @@ class ApiConstants {
   static const String verifyResetCode = '/auth/verify-reset-code';
   static const String resetPassword = '/auth/reset-password';
   static const String updateProfile = '/auth/my-account';
+
+  static const String statistics = '/statistics';
 }

@@ -57,6 +57,7 @@ dependencies:
   shared_preferences: ^2.5.5
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
+  lottie: ^3.3.3
 
 dev_dependencies:
   flutter_test:
@@ -88,6 +89,7 @@ flutter:
     - assets/logo/
     - assets/icons/
     - assets/audio/
+    - assets/lottie/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
