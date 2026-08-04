@@ -63,4 +63,28 @@ class User extends _$User {
     }
     return false;
   }
+
+  // get privacy policy content
+  Future<String> fetchPrivacyPolicy() async {
+    final response = await CustomHttp.get(endpoint: ApiConstants.privacyPolicy);
+
+    final data = response.data?['data'];
+    if (response.ok && data is Map<String, dynamic>) {
+      final content = data['content'] as String? ?? '';
+      if (content.trim().isNotEmpty) return content;
+    }
+    throw Exception(response.error ?? 'Failed to load privacy policy');
+  }
+
+  // get terms and conditions content
+  Future<String> fetchTermsCondition() async {
+    final response = await CustomHttp.get(endpoint: ApiConstants.termsCondition);
+
+    final data = response.data?['data'];
+    if (response.ok && data is Map<String, dynamic>) {
+      final content = data['content'] as String? ?? '';
+      if (content.trim().isNotEmpty) return content;
+    }
+    throw Exception(response.error ?? 'Failed to load terms and conditions');
+  }
 }

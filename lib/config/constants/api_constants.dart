@@ -11,4 +11,6 @@ class ApiConstants {
 
   static const String statistics = '/statistics';
   static const String me = '/auth/my-account';
+  static const String privacyPolicy = "/common/privacy";
+  static const String termsCondition = '/common/terms';
 }

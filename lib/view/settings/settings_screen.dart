@@ -39,6 +39,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       data: (user) {
         return Scaffold(
           appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            surfaceTintColor: Colors.transparent,
+
             title: Text(
               'Settings',
               style: TextStyle(
@@ -164,17 +168,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ],
                 ),
                 SizedBox(height: 20.h),
-                SettingsSection(
-                  label: 'Exit',
-                  children: [
-                    SettingsTile(
-                      svgAsset: 'assets/icons/Logout.svg',
-                      iconColor: const Color(0xFF_F04438),
-                      title: 'Log out',
-                      titleColor: const Color(0xFF_F04438),
-                      onTap: _onLogout,
-                    ),
-                  ],
+                SafeArea(
+                  child: SettingsSection(
+                    label: 'Exit',
+                    children: [
+                      SettingsTile(
+                        svgAsset: 'assets/icons/Logout.svg',
+                        iconColor: const Color(0xFF_F04438),
+                        title: 'Log out',
+                        titleColor: const Color(0xFF_F04438),
+                        onTap: _onLogout,
+                      ),
+                    ],
+                  ),
                 ),
                 SizedBox(height: 40.h),
               ],
