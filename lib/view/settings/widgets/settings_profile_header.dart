@@ -1,3 +1,4 @@
+import 'package:famka/utils/text_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -62,7 +63,7 @@ class SettingsProfileHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              name,
+              name.toTitleCase(),
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,

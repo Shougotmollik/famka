@@ -182,62 +182,64 @@ void showImagePickerOptions(
   showModalBottomSheet(
     context: context,
     builder: (context) {
-      return Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
+      return SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20.r),
+              topRight: Radius.circular(20.r),
+            ),
           ),
-        ),
-        width: 1.sw,
-        height: 0.25.sh,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                selectImage(ImageSource.camera);
-              },
-              child: SizedBox(
-                width: 72.w,
-                height: 72.w,
-                child: Center(
-                  child: SvgPicture.string(
-                    cameraIcon,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).colorScheme.onSurface,
-                      BlendMode.srcIn,
+          width: 1.sw,
+          height: 0.25.sh,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  selectImage(ImageSource.camera);
+                },
+                child: SizedBox(
+                  width: 72.w,
+                  height: 72.w,
+                  child: Center(
+                    child: SvgPicture.string(
+                      cameraIcon,
+                      colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.onSurface,
+                        BlendMode.srcIn,
+                      ),
+                      width: 72.w,
+                      fit: BoxFit.fitWidth,
                     ),
-                    width: 72.w,
-                    fit: BoxFit.fitWidth,
                   ),
                 ),
               ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                selectImage(ImageSource.gallery);
-              },
-              child: SizedBox(
-                width: 72.w,
-                height: 72.w,
-                child: Center(
-                  child: SvgPicture.string(
-                    galleryIcon,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).colorScheme.onSurface,
-                      BlendMode.srcIn,
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  selectImage(ImageSource.gallery);
+                },
+                child: SizedBox(
+                  width: 72.w,
+                  height: 72.w,
+                  child: Center(
+                    child: SvgPicture.string(
+                      galleryIcon,
+                      colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.onSurface,
+                        BlendMode.srcIn,
+                      ),
+                      width: 72.w,
+                      fit: BoxFit.fitWidth,
                     ),
-                    width: 72.w,
-                    fit: BoxFit.fitWidth,
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     },

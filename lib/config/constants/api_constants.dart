@@ -10,4 +10,5 @@ class ApiConstants {
   static const String updateProfile = '/auth/my-account';
 
   static const String statistics = '/statistics';
+  static const String me = '/auth/my-account';
 }

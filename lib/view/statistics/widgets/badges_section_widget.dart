@@ -68,12 +68,13 @@ class BadgesSectionWidget extends StatelessWidget {
             ],
           ),
           SizedBox(height: 20.h),
-          // Horizontally scrollable badges row
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             child: Row(
-              spacing: 16.w,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              // spacing: 12.w,
               children: badges
                   .map(
                     (badge) => BadgeItemWidget(

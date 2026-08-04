@@ -1,6 +1,9 @@
 import 'package:animations/animations.dart';
 import 'package:famka/config/routes/router_path.dart';
+import 'package:famka/provider/user_provider.dart';
+import 'package:famka/utils/text_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -9,14 +12,14 @@ import '../../models/task_item_model.dart';
 import 'widgets/task_category_card.dart';
 import 'widgets/streak_day_item.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<double> _appBarAnimation;
@@ -141,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen>
               SizedBox(height: 54.h),
               FadeScaleTransition(
                 animation: _appBarAnimation,
-                child: _buildAppBar(),
+                child: _buildAppBar(ref),
               ),
               SizedBox(height: 24.h),
               FadeScaleTransition(
@@ -234,16 +237,23 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(WidgetRef ref) {
+    final userState = ref.watch(userProvider);
     return Row(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(100.r),
           child: Image.network(
-            "https://img.freepik.com/free-photo/young-cute-woman-cap-glasses-posing-outside-showing-thumbs-up-high-quality-photo_114579-91847.jpg?semt=ais_hybrid&w=740&q=80",
+            userState.value?.avatar ?? "",
             width: 42.w,
             height: 42.w,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.white,
+                child: Icon(Icons.person, size: 42.sp, color: Colors.black),
+              );
+            },
           ),
         ),
         SizedBox(width: 8.w),
@@ -251,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Good morning, Nirjona 👋',
+              'Good morning, ${userState.value?.fullName.firstName ?? ""} 👋',
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
