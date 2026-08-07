@@ -1,4 +1,5 @@
 class ApiConstants {
+  // auth
   static const String refreshToken = '/auth/refresh';
   static const String signUp = '/auth/sign-up';
   static const String verifyEmail = '/auth/verify-email';
@@ -7,10 +8,17 @@ class ApiConstants {
   static const String forgotPassword = '/auth/forgot-password';
   static const String verifyResetCode = '/auth/verify-reset-code';
   static const String resetPassword = '/auth/reset-password';
-  static const String updateProfile = '/auth/my-account';
 
-  static const String statistics = '/statistics';
+  // profile
+  static const String updateProfile = '/auth/my-account';
   static const String me = '/auth/my-account';
   static const String privacyPolicy = "/common/privacy";
   static const String termsCondition = '/common/terms';
+
+  // statistics
+  static const String statistics = '/statistics';
+
+  // notifications
+  static const String notifications = '/notification/list';
+  static const String readNotification = '/notification/read';
 }

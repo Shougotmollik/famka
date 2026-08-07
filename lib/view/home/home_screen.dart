@@ -1,5 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:famka/config/routes/router_path.dart';
+import 'package:famka/config/theme/app_colors.dart';
+import 'package:famka/provider/notification_provider.dart';
 import 'package:famka/provider/user_provider.dart';
 import 'package:famka/utils/text_formatter.dart';
 import 'package:flutter/material.dart';
@@ -103,6 +105,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(notificationsProvider.notifier).fetchNotifications();
+      }
+    });
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -239,6 +246,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildAppBar(WidgetRef ref) {
     final userState = ref.watch(userProvider);
+    final notifications = ref.watch(notificationsProvider).value;
+    final unreadCount = notifications?.meta.unreadCount ?? 0;
     return Row(
       children: [
         ClipRRect(
@@ -282,17 +291,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Spacer(),
         GestureDetector(
           onTap: () => context.push(AppRoutes.notification),
-          child: Container(
-            padding: EdgeInsets.all(8.r),
-            decoration: BoxDecoration(
-              color: Color(0XFF_1F242B),
-              borderRadius: BorderRadius.circular(100.r),
-              border: Border.all(color: Color(0XFF_3A4150)),
-            ),
-            child: SvgPicture.asset("assets/icons/Bell.svg"),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: Color(0XFF_1F242B),
+                  borderRadius: BorderRadius.circular(100.r),
+                  border: Border.all(color: Color(0XFF_3A4150)),
+                ),
+                child: SvgPicture.asset("assets/icons/Bell.svg"),
+              ),
+              if (unreadCount > 0) _buildUnreadBadge(unreadCount),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildUnreadBadge(int count) {
+    return Positioned(
+      top: -4.r,
+      right: -4.r,
+      // Bouncy scale + fade entrance whenever the badge first appears.
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutBack,
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value.clamp(0.0, 1.0),
+            child: Transform.scale(scale: value, child: child),
+          );
+        },
+        child: Container(
+          constraints: BoxConstraints(minWidth: 18.r, minHeight: 18.r),
+          padding: EdgeInsets.symmetric(horizontal: 5.w),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(100.r),
+            border: Border.all(color: const Color(0xFF1A1E25), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.45),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            count > 99 ? '99+' : '$count',
+            style: TextStyle(
+              fontSize: 9.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              height: 1,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
