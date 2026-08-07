@@ -85,6 +85,26 @@ class NotificationMetaModel {
       unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
     );
   }
+
+  NotificationMetaModel copyWith({
+    int? count,
+    int? totalPages,
+    int? currentPage,
+    int? pageSize,
+    String? next,
+    String? previous,
+    int? unreadCount,
+  }) {
+    return NotificationMetaModel(
+      count: count ?? this.count,
+      totalPages: totalPages ?? this.totalPages,
+      currentPage: currentPage ?? this.currentPage,
+      pageSize: pageSize ?? this.pageSize,
+      next: next ?? this.next,
+      previous: previous ?? this.previous,
+      unreadCount: unreadCount ?? this.unreadCount,
+    );
+  }
 }
 
 class NotificationResponseModel {

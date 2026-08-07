@@ -73,15 +73,7 @@ class Notifications extends _$Notifications {
         final meta = latest.meta;
         final newMeta = meta.unreadCount <= 0
             ? meta
-            : NotificationMetaModel(
-                count: meta.count,
-                totalPages: meta.totalPages,
-                currentPage: meta.currentPage,
-                pageSize: meta.pageSize,
-                next: meta.next,
-                previous: meta.previous,
-                unreadCount: meta.unreadCount - 1,
-              );
+            : meta.copyWith(unreadCount: meta.unreadCount - 1);
 
         state = AsyncData(
           NotificationResponseModel(items: updatedItems, meta: newMeta),
@@ -89,6 +81,42 @@ class Notifications extends _$Notifications {
       }
     } catch (e) {
       debugPrint('Failed to mark notification $id as read: $e');
+    }
+  }
+
+  // mark all notifications as read
+  Future<void> markAllAsRead() async {
+    // Nothing to do when there are no unread items.
+    final current = state.value;
+    if (current == null || current.items.every((n) => n.isRead)) return;
+
+    try {
+      final response = await CustomHttp.post(
+        endpoint: ApiConstants.allNotification,
+      );
+
+      if (!response.ok) {
+        // CustomHttp already shows a floating snackbar on error;
+        // keep the current list intact.
+        return;
+      }
+
+      final latest = state.value;
+      if (latest != null) {
+        final updatedItems = latest.items
+            .map((n) => n.isRead ? n : n.copyWith(isRead: true))
+            .toList();
+
+        state = AsyncData(
+          NotificationResponseModel(
+            items: updatedItems,
+            meta: latest.meta.copyWith(unreadCount: 0),
+          ),
+        );
+      }
+    } catch (e) {
+      // Keep the list intact — the error was already surfaced by CustomHttp.
+      debugPrint('Failed to mark all notifications as read: $e');
     }
   }
 }

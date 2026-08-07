@@ -1,3 +1,4 @@
+import 'package:famka/config/theme/app_colors.dart';
 import 'package:famka/models/notification.dart';
 import 'package:famka/provider/notification_provider.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ class NotificationScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationScreenState extends ConsumerState<NotificationScreen> {
+  bool _isMarkingAllRead = false;
+
   @override
   void initState() {
     super.initState();
@@ -20,6 +23,12 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         ref.read(notificationsProvider.notifier).fetchNotifications();
       }
     });
+  }
+
+  Future<void> _markAllRead() async {
+    setState(() => _isMarkingAllRead = true);
+    await ref.read(notificationsProvider.notifier).markAllAsRead();
+    if (mounted) setState(() => _isMarkingAllRead = false);
   }
 
   void _retry() {
@@ -33,9 +42,10 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final notificationsAsync = ref.watch(notificationsProvider);
+    final unreadCount = notificationsAsync.value?.meta.unreadCount ?? 0;
 
     return Scaffold(
-      appBar: _buildAppBar(context),
+      appBar: _buildAppBar(context, unreadCount: unreadCount),
       body: notificationsAsync.when(
         skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -45,11 +55,37 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) {
+  AppBar _buildAppBar(BuildContext context, {required int unreadCount}) {
     return AppBar(
       backgroundColor: const Color(0xFF1A1E25),
       elevation: 0,
       centerTitle: true,
+      actions: [
+        if (unreadCount > 0)
+          Padding(
+            padding: EdgeInsets.only(right: 12.w),
+            child: TextButton(
+              onPressed: _isMarkingAllRead ? null : _markAllRead,
+              child: _isMarkingAllRead
+                  ? SizedBox(
+                      width: 18.sp,
+                      height: 18.sp,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Text(
+                      'Mark all read',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+            ),
+          ),
+      ],
       leadingWidth: 64.w,
       leading: Center(
         child: GestureDetector(
