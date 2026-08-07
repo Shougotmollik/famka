@@ -86,7 +86,6 @@ class Notifications extends _$Notifications {
 
   // mark all notifications as read
   Future<void> markAllAsRead() async {
-    // Nothing to do when there are no unread items.
     final current = state.value;
     if (current == null || current.items.every((n) => n.isRead)) return;
 
@@ -96,8 +95,6 @@ class Notifications extends _$Notifications {
       );
 
       if (!response.ok) {
-        // CustomHttp already shows a floating snackbar on error;
-        // keep the current list intact.
         return;
       }
 
@@ -115,7 +112,6 @@ class Notifications extends _$Notifications {
         );
       }
     } catch (e) {
-      // Keep the list intact — the error was already surfaced by CustomHttp.
       debugPrint('Failed to mark all notifications as read: $e');
     }
   }

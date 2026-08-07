@@ -18,8 +18,6 @@ class StatisticScreen extends ConsumerStatefulWidget {
 }
 
 class _StatisticScreenState extends ConsumerState<StatisticScreen> {
-  /// 5x4 color matrix that rotates hue by ~+47° (blue → app purple).
-  /// Neutral grays/whites stay put, so the animation keeps its shading.
   static const List<double> _blueToPurpleMatrix = [
     0.593954, -0.295547, 0.701592, 0, 0, //
     0.172318, 1.011759, -0.184077, 0, 0, //
@@ -76,9 +74,6 @@ class _StatisticScreenState extends ConsumerState<StatisticScreen> {
       body: statsAsync.when(
         skipLoadingOnRefresh: true,
         loading: () => Center(
-          // Runtime hue-rotation: shifts the animation's blue palette to
-          // the app's purple primary so it matches the theme no matter
-          // what colors the source JSON is exported with.
           child: ColorFiltered(
             colorFilter: const ColorFilter.matrix(_blueToPurpleMatrix),
             child: Lottie.asset(

@@ -22,4 +22,7 @@ class ApiConstants {
   static const String notifications = '/notification/list';
   static const String readNotification = '/notification/read';
   static const String allNotification = '/notification/read-all';
+
+  // home
+  static const String home = '/home';
 }
