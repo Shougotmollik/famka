@@ -25,4 +25,9 @@ class ApiConstants {
 
   // home
   static const String home = '/home';
+
+  // quiz
+  static String getQuiz(String storyId, String difficulty) =>
+      "/home/stories/$storyId/quiz?difficulty=$difficulty";
+  static String audioListented = "/home/audio-listen";
 }

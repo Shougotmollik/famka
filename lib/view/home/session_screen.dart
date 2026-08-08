@@ -1,21 +1,30 @@
-import 'package:audio_waveforms/audio_waveforms.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:famka/config/theme/app_colors.dart';
-import 'package:go_router/go_router.dart';
-import 'package:famka/config/routes/router_path.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
-class SessionScreen extends StatefulWidget {
-  const SessionScreen({super.key});
+import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:famka/config/routes/router_path.dart';
+import 'package:famka/config/theme/app_colors.dart';
+import 'package:famka/provider/quiz_provider.dart';
+import 'package:famka/utils/app_snackbar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+
+class SessionScreen extends ConsumerStatefulWidget {
+  const SessionScreen({super.key, this.storyId, this.difficulty, this.title});
+
+  final String? storyId;
+  final String? difficulty;
+  final String? title;
 
   @override
-  State<SessionScreen> createState() => _SessionScreenState();
+  ConsumerState<SessionScreen> createState() => _SessionScreenState();
 }
 
-class _SessionScreenState extends State<SessionScreen>
+class _SessionScreenState extends ConsumerState<SessionScreen>
     with SingleTickerProviderStateMixin {
   late final PlayerController _playerController;
   late final AnimationController _pulseCtrl;
@@ -24,11 +33,12 @@ class _SessionScreenState extends State<SessionScreen>
   bool _isPlaying = false;
   bool _isLoaded = false;
   bool _audioCompleted = false;
+  bool _submittingAudio = false;
   String? _loadError;
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
 
-  static const String _audioAssetPath =
+  static const String _fallbackAudioAssetPath =
       'assets/audio/Test your listening skill.mp3';
 
   @override
@@ -50,16 +60,23 @@ class _SessionScreenState extends State<SessionScreen>
 
   Future<void> _initPlayer() async {
     try {
-      // Copy the bundled audio asset to a temp file so the native player can access it.
-      final dir = await getTemporaryDirectory();
-      final tempFile = File('${dir.path}/session_audio.mp3');
-      if (!await tempFile.exists()) {
-        final data = await rootBundle.load(_audioAssetPath);
-        await tempFile.writeAsBytes(data.buffer.asUint8List());
+      String audioPath;
+
+      final remoteUrl = await _resolveAudioUrl();
+      if (remoteUrl != null && remoteUrl.isNotEmpty) {
+        audioPath = await _downloadAudio(remoteUrl);
+      } else {
+        final dir = await getTemporaryDirectory();
+        final tempFile = File('${dir.path}/session_audio.mp3');
+        if (!await tempFile.exists()) {
+          final data = await rootBundle.load(_fallbackAudioAssetPath);
+          await tempFile.writeAsBytes(data.buffer.asUint8List());
+        }
+        audioPath = tempFile.path;
       }
 
       await _playerController.preparePlayer(
-        path: tempFile.path,
+        path: audioPath,
         shouldExtractWaveform: true,
         noOfSamples: 100,
         volume: 1.0,
@@ -97,8 +114,6 @@ class _SessionScreenState extends State<SessionScreen>
         setState(() {
           _isPlaying = state == PlayerState.playing;
           if (state == PlayerState.playing) {
-            // User started playing again — reset completion so they must
-            // finish listening again before the quiz unlocks.
             _audioCompleted = false;
             _pulseCtrl.reset();
           }
@@ -116,6 +131,31 @@ class _SessionScreenState extends State<SessionScreen>
         _duration = Duration(milliseconds: _playerController.maxDuration);
       });
     }
+  }
+
+  Future<String?> _resolveAudioUrl() async {
+    final storyId = widget.storyId;
+    final difficulty = widget.difficulty;
+    if (storyId == null || difficulty == null) return null;
+
+    await ref
+        .read(quizProvider.notifier)
+        .fetchQuiz(storyId: storyId, difficulty: difficulty);
+
+    final questions = ref.read(quizProvider).value?.questions ?? const [];
+    if (questions.isEmpty) return null;
+    return questions.first.audio;
+  }
+
+  Future<String> _downloadAudio(String url) async {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to download audio (HTTP ${response.statusCode})');
+    }
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/session_audio_remote.mp3');
+    await file.writeAsBytes(response.bodyBytes);
+    return file.path;
   }
 
   Future<void> _togglePlayPause() async {
@@ -197,7 +237,7 @@ class _SessionScreenState extends State<SessionScreen>
                 height: 40.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   border: Border.all(color: Colors.white24, width: 1),
                 ),
                 child: Icon(
@@ -226,7 +266,7 @@ class _SessionScreenState extends State<SessionScreen>
     return Column(
       children: [
         Text(
-          'Voice recognition',
+          widget.title ?? 'Voice recognition',
           style: TextStyle(
             color: Colors.white,
             fontSize: 16.sp,
@@ -236,7 +276,9 @@ class _SessionScreenState extends State<SessionScreen>
         ),
         SizedBox(height: 4.h),
         Text(
-          'Chapter 1 · Lesson 2',
+          widget.difficulty != null
+              ? '${widget.difficulty} difficulty'
+              : 'Chapter 1 · Lesson 2',
           style: TextStyle(
             color: Colors.white54,
             fontSize: 13.sp,
@@ -412,12 +454,50 @@ class _SessionScreenState extends State<SessionScreen>
     );
   }
 
-  void _onQuizTap() {
-    context.push(AppRoutes.quiz);
+  Future<void> _onQuizTap() async {
+    final questions = ref.read(quizProvider).value?.questions ?? const [];
+    final audioId = questions.isNotEmpty
+        ? (questions.first.audioId.isNotEmpty
+            ? questions.first.audioId
+            : questions.first.id)
+        : (widget.storyId ?? '');
+
+    if (audioId.isEmpty) {
+      AppSnackbar.show(
+        message: 'No audio found for this session. Please try again.',
+        type: SnackType.error,
+      );
+      return;
+    }
+
+    setState(() => _submittingAudio = true);
+    final listened = await ref
+        .read(quizProvider.notifier)
+        .sessionAudioListened(audioId: audioId);
+    if (!mounted) return;
+    setState(() => _submittingAudio = false);
+
+    if (!listened) {
+      AppSnackbar.show(
+        message: 'Could not verify your listening session. Please try again.',
+        type: SnackType.error,
+      );
+      return;
+    }
+
+    context.push(
+      AppRoutes.quiz,
+      extra: {
+        'storyId': widget.storyId,
+        'difficulty': widget.difficulty,
+        'title': widget.title,
+      },
+    );
   }
 
   Widget _buildQuizButton() {
-    final isActive = _audioCompleted;
+    final isBusy = _submittingAudio;
+    final isActive = _audioCompleted && !isBusy;
 
     Widget button = Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -429,7 +509,9 @@ class _SessionScreenState extends State<SessionScreen>
           width: double.infinity,
           height: 56.h,
           decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : const Color(0xFF2A2D38),
+            color: isActive || isBusy
+                ? AppColors.primary
+                : const Color(0xFF2A2D38),
             borderRadius: BorderRadius.circular(32.r),
             boxShadow: isActive
                 ? [
@@ -442,20 +524,31 @@ class _SessionScreenState extends State<SessionScreen>
                 : null,
           ),
           alignment: Alignment.center,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isActive ? 'Take the Quiz' : 'Listen to the full audio first',
-                style: TextStyle(
-                  color: isActive ? Colors.white : Colors.white38,
-                  fontSize: 16.sp,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
+          child: isBusy
+              ? SizedBox(
+                  width: 22.w,
+                  height: 22.w,
+                  child: const CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      isActive
+                          ? 'Take the Quiz'
+                          : 'Listen to the full audio first',
+                      style: TextStyle(
+                        color: isActive ? Colors.white : Colors.white38,
+                        fontSize: 16.sp,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );

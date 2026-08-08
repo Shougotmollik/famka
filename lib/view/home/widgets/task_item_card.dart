@@ -18,15 +18,32 @@ class TaskItemCard extends StatelessWidget {
     required this.isLast,
   });
 
-  Future<void> _onTap(BuildContext context) async {
-    if (task.iconType == TaskIconType.locked) return;
+  Map<QuizDifficulty, bool> get _attemptedDifficulties {
+    return task.attemptedDifficulties.map(
+      (key, value) => MapEntry(QuizDifficultyX.fromApiKey(key), value),
+    );
+  }
 
-    final difficulty = await showQuizDifficultyDialog(context);
+  Future<void> _onTap(BuildContext context) async {
+    // Everything already attempted (story fully completed) → nothing to pick.
+    final attempts = task.attemptedDifficulties;
+    if (attempts.isNotEmpty && !attempts.containsValue(false)) return;
+
+    final difficulty = await showQuizDifficultyDialog(
+      context,
+      attempted: _attemptedDifficulties,
+    );
     if (difficulty == null || !context.mounted) return;
 
+    // Pass only primitives through `extra` so GoRouter can serialize it.
     context.push(
       AppRoutes.taskDetails,
-      extra: {'task': task, 'difficulty': difficulty},
+      extra: {
+        'title': task.title,
+        'storyId': task.storyId,
+        'difficulty': difficulty.name.toUpperCase(),
+        'about': task.subtitle,
+      },
     );
   }
 
@@ -43,8 +60,6 @@ class TaskItemCard extends StatelessWidget {
         ? const Color(0xFF8E35E1)
         : const Color(0xFF3A4150);
 
-    final isLocked = task.iconType == TaskIconType.locked;
-
     return Padding(
       padding: EdgeInsets.only(
         left: 16.w,
@@ -52,7 +67,7 @@ class TaskItemCard extends StatelessWidget {
         bottom: isLast ? 16.h : 0,
       ),
       child: InkWell(
-        onTap: isLocked ? null : () => _onTap(context),
+        onTap: () => _onTap(context),
         borderRadius: BorderRadius.circular(16.r),
         child: IntrinsicHeight(
           child: Row(
@@ -146,6 +161,8 @@ class TaskItemCard extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF8B8E95),
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 16.h),
                         Row(

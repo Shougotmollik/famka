@@ -39,6 +39,14 @@ class TaskItemModel {
   final bool isActive;
   final bool isNew;
 
+  /// The story's id from the home model — used when navigating to the
+  /// task details / session flow.
+  final String storyId;
+
+  /// Attempted state of each difficulty key ("EASY"/"MEDIUM"/"HARD"),
+  /// sourced from the home model's story difficulties.
+  final Map<String, bool> attemptedDifficulties;
+
   TaskItemModel({
     required this.title,
     required this.subtitle,
@@ -46,12 +54,17 @@ class TaskItemModel {
     required this.totalProgress,
     this.isActive = false,
     this.isNew = false,
+    this.storyId = '',
+    this.attemptedDifficulties = const {},
   });
 
   TaskIconType get iconType {
-    if (progress >= totalProgress) return TaskIconType.completed;
-    if (progress > 0) return TaskIconType.inProgress;
-    return TaskIconType.locked;
+    if (progress >= totalProgress && totalProgress > 0) {
+      return TaskIconType.completed;
+    }
+    // The home model has no "locked" concept — every story is available, so
+    // un-attempted stories show the start (headphones) affordance instead.
+    return TaskIconType.inProgress;
   }
 
   Map<String, dynamic> toJson() => {
@@ -61,6 +74,8 @@ class TaskItemModel {
         'total_progress': totalProgress,
         'is_active': isActive,
         'is_new': isNew,
+        'story_id': storyId,
+        'attempted_difficulties': attemptedDifficulties,
       };
 
   factory TaskItemModel.fromJson(Map<String, dynamic> json) {
@@ -71,6 +86,10 @@ class TaskItemModel {
       totalProgress: json['total_progress'] as int,
       isActive: json['is_active'] as bool? ?? false,
       isNew: json['is_new'] as bool? ?? false,
+      storyId: json['story_id'] as String? ?? '',
+      attemptedDifficulties:
+          (json['attempted_difficulties'] as Map<String, dynamic>? ?? {})
+              .map((key, value) => MapEntry(key, value as bool? ?? false)),
     );
   }
 }

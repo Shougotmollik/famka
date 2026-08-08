@@ -1,170 +1,218 @@
 import 'package:famka/config/routes/router_path.dart';
+import 'package:famka/config/theme/app_colors.dart';
+import 'package:famka/models/quiz.dart';
+import 'package:famka/provider/quiz_provider.dart';
+import 'package:famka/view/widgets/custom_elevated_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../config/theme/app_colors.dart';
-import '../../models/quiz_model.dart';
-import '../widgets/custom_elevated_button.dart';
 import 'widgets/quiz_explanation_box.dart';
 import 'widgets/quiz_option_tile.dart';
 import 'widgets/quiz_progress_dots.dart';
 
-const _sampleQuiz = QuizModel(
-  title: 'Radio Interview: Climate',
-  questions: [
-    QuizQuestion(
-      question: 'Who mentioned that the meeting was postponed to Friday?',
-      correctLabel: 'B',
-      explanation:
-          'Good! The climatologist gave the specific number of degrees.',
-      options: [
-        QuizOption(label: 'A', text: 'Anna'),
-        QuizOption(label: 'B', text: 'Marek'),
-        QuizOption(label: 'C', text: 'Zofia'),
-        QuizOption(label: 'D', text: 'None of them'),
-      ],
-    ),
-    QuizQuestion(
-      question: 'What temperature increase was specifically mentioned?',
-      correctLabel: 'C',
-      explanation: 'Correct! A 1.5°C increase was the threshold discussed.',
-      options: [
-        QuizOption(label: 'A', text: '0.5°C'),
-        QuizOption(label: 'B', text: '1.0°C'),
-        QuizOption(label: 'C', text: '1.5°C'),
-        QuizOption(label: 'D', text: '2.0°C'),
-      ],
-    ),
-    QuizQuestion(
-      question: 'Which topic was the main focus of the radio interview?',
-      correctLabel: 'A',
-      explanation:
-          'Right! Climate change and its effects were the central theme.',
-      options: [
-        QuizOption(label: 'A', text: 'Climate change'),
-        QuizOption(label: 'B', text: 'Water pollution'),
-        QuizOption(label: 'C', text: 'Air quality'),
-        QuizOption(label: 'D', text: 'Deforestation'),
-      ],
-    ),
-    QuizQuestion(
-      question: 'Who was the expert guest on the radio show?',
-      correctLabel: 'D',
-      explanation: 'Correct! A climatologist was invited as the expert guest.',
-      options: [
-        QuizOption(label: 'A', text: 'A biologist'),
-        QuizOption(label: 'B', text: 'A geologist'),
-        QuizOption(label: 'C', text: 'An astronomer'),
-        QuizOption(label: 'D', text: 'A climatologist'),
-      ],
-    ),
-    QuizQuestion(
-      question: 'What action was agreed upon at the end of the interview?',
-      correctLabel: 'B',
-      explanation: 'Well done! A follow-up meeting was scheduled.',
-      options: [
-        QuizOption(label: 'A', text: 'Publish a report'),
-        QuizOption(label: 'B', text: 'Schedule a follow-up'),
-        QuizOption(label: 'C', text: 'Start a campaign'),
-        QuizOption(label: 'D', text: 'No action taken'),
-      ],
-    ),
-  ],
-);
+class QuizScreen extends ConsumerStatefulWidget {
+  const QuizScreen({super.key, this.storyId, this.difficulty, this.title});
 
-class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key, this.quiz = _sampleQuiz});
-
-  final QuizModel quiz;
+  final String? storyId;
+  final String? difficulty;
+  final String? title;
 
   @override
-  State<QuizScreen> createState() => _QuizScreenState();
+  ConsumerState<QuizScreen> createState() => _QuizScreenState();
 }
 
-class _QuizScreenState extends State<QuizScreen> {
+class _QuizScreenState extends ConsumerState<QuizScreen> {
   int _currentIndex = 0;
-  String? _selectedLabel;
+  String? _selectedKey;
 
-  QuizQuestion get _currentQuestion => widget.quiz.questions[_currentIndex];
-  bool get _answered => _selectedLabel != null;
-
-  void _select(String label) {
-    if (_answered) return;
-    setState(() => _selectedLabel = label);
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _fetchQuiz();
+    });
   }
 
-  void _next() {
-    final isLast = _currentIndex == widget.quiz.questions.length - 1;
+  void _fetchQuiz() {
+    final storyId = widget.storyId;
+    final difficulty = widget.difficulty;
+    if (storyId == null || difficulty == null) return;
+    ref
+        .read(quizProvider.notifier)
+        .fetchQuiz(storyId: storyId, difficulty: difficulty);
+  }
+
+  void _select(String key) {
+    if (_selectedKey != null) return;
+    setState(() => _selectedKey = key);
+  }
+
+  void _next(List<QuizQuestionModel> questions) {
+    final isLast = _currentIndex == questions.length - 1;
     if (isLast) {
       context.push(AppRoutes.quizResult);
       return;
     }
     setState(() {
       _currentIndex++;
-      _selectedLabel = null;
+      _selectedKey = null;
     });
   }
 
-  QuizOptionState _stateFor(String label) {
-    if (_selectedLabel == null) return QuizOptionState.idle;
-    if (label == _currentQuestion.correctLabel) return QuizOptionState.correct;
-    if (label == _selectedLabel) return QuizOptionState.incorrect;
+  QuizOptionState _stateFor(QuizOptionModel option, String? correctKey) {
+    if (_selectedKey == null) return QuizOptionState.idle;
+    if (option.optionKey == correctKey) return QuizOptionState.correct;
+    if (option.optionKey == _selectedKey) return QuizOptionState.incorrect;
     return QuizOptionState.idle;
   }
 
   @override
   Widget build(BuildContext context) {
+    final quizAsync = ref.watch(quizProvider);
+
+    return quizAsync.when(
+      skipLoadingOnRefresh: true,
+      loading: () => const _QuizScaffold(child: _QuizLoading()),
+      error: (error, stackTrace) =>
+          _QuizScaffold(child: _QuizError(onRetry: _fetchQuiz)),
+      data: (response) {
+        final questions = response.questions;
+        if (questions.isEmpty) {
+          return _QuizScaffold(child: _QuizError(onRetry: _fetchQuiz));
+        }
+        // Guard against a refresh that returns fewer questions while the
+        // user is partway through the quiz.
+        if (_currentIndex >= questions.length) {
+          _currentIndex = questions.length - 1;
+        }
+
+        final question = questions[_currentIndex];
+        final correctKey = question.options
+            .where((o) => o.isCorrect)
+            .map((o) => o.optionKey)
+            .firstOrNull;
+
+        return Scaffold(
+          backgroundColor: AppColors.bgColor,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _QuizAppBar(onBack: () => Navigator.pop(context)),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 16.h),
+                        _QuizHeader(
+                          title: widget.title ?? question.difficulty,
+                          total: questions.length,
+                          current: _currentIndex,
+                        ),
+                        SizedBox(height: 24.h),
+                        _QuizQuestionSection(
+                          index: _currentIndex,
+                          total: questions.length,
+                          question: question.questionText,
+                        ),
+                        SizedBox(height: 20.h),
+                        ...question.options.map(
+                          (opt) => Padding(
+                            padding: EdgeInsets.only(bottom: 12.h),
+                            child: QuizOptionTile(
+                              label: opt.optionKey.toUpperCase(),
+                              text: opt.optionText,
+                              state: _stateFor(opt, correctKey),
+                              onTap: () => _select(opt.optionKey),
+                            ),
+                          ),
+                        ),
+                        if (_selectedKey != null &&
+                            question.explanation.isNotEmpty) ...[
+                          SizedBox(height: 4.h),
+                          QuizExplanationBox(text: question.explanation),
+                        ],
+                        SizedBox(height: 24.h),
+                      ],
+                    ),
+                  ),
+                ),
+                _QuizBottomBar(
+                  label: _currentIndex == questions.length - 1
+                      ? 'Submit'
+                      : 'Next',
+                  onNext: () => _next(questions),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _QuizScaffold extends StatelessWidget {
+  const _QuizScaffold({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgColor,
-      body: SafeArea(
+      body: SafeArea(child: child),
+    );
+  }
+}
+
+class _QuizLoading extends StatelessWidget {
+  const _QuizLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: CircularProgressIndicator(
+        color: AppColors.primary,
+        strokeWidth: 3,
+      ),
+    );
+  }
+}
+
+class _QuizError extends StatelessWidget {
+  const _QuizError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 32.w),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _QuizAppBar(onBack: () => Navigator.pop(context)),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 16.h),
-                    _QuizHeader(
-                      title: widget.quiz.title,
-                      total: widget.quiz.questions.length,
-                      current: _currentIndex,
-                    ),
-                    SizedBox(height: 24.h),
-                    _QuizQuestionSection(
-                      index: _currentIndex,
-                      total: widget.quiz.questions.length,
-                      question: _currentQuestion.question,
-                    ),
-                    SizedBox(height: 20.h),
-                    ..._currentQuestion.options.map(
-                      (opt) => Padding(
-                        padding: EdgeInsets.only(bottom: 12.h),
-                        child: QuizOptionTile(
-                          label: opt.label,
-                          text: opt.text,
-                          state: _stateFor(opt.label),
-                          onTap: () => _select(opt.label),
-                        ),
-                      ),
-                    ),
-                    if (_answered && _currentQuestion.explanation != null) ...[
-                      SizedBox(height: 4.h),
-                      QuizExplanationBox(text: _currentQuestion.explanation!),
-                    ],
-                    SizedBox(height: 24.h),
-                  ],
-                ),
+            Icon(Icons.cloud_off_rounded, size: 48.w, color: Colors.white38),
+            SizedBox(height: 12.h),
+            Text(
+              'Could not load the quiz',
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
             ),
-            _QuizBottomBar(
-              label: _currentIndex == widget.quiz.questions.length - 1
-                  ? 'Submit'
-                  : 'Next',
-              onNext: _next,
+            SizedBox(height: 16.h),
+            CustomElevatedButton(
+              title: 'Retry',
+              color: AppColors.primary,
+              textColor: Colors.white,
+              onPressed: onRetry,
             ),
           ],
         ),

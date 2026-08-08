@@ -1,42 +1,35 @@
 import 'package:famka/config/routes/router_path.dart';
+import 'package:famka/config/theme/app_colors.dart';
+import 'package:famka/models/quiz.dart';
+import 'package:famka/provider/quiz_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/task_item_model.dart';
 import 'widgets/quiz_difficulty_dialog.dart';
 
-class TaskDetailsScreen extends StatelessWidget {
-  final TaskItemModel? task;
+class TaskDetailsScreen extends ConsumerStatefulWidget {
+  const TaskDetailsScreen({
+    super.key,
+    this.title,
+    this.storyId,
+    this.difficulty,
+    this.about,
+  });
+
+  final String? title;
+  final String? storyId;
   final QuizDifficulty? difficulty;
+  final String? about;
 
-  const TaskDetailsScreen({super.key, this.task, this.difficulty});
+  @override
+  ConsumerState<TaskDetailsScreen> createState() => _TaskDetailsScreenState();
+}
 
+class _TaskDetailsScreenState extends ConsumerState<TaskDetailsScreen> {
   static const _gradientTop = Color(0xFF241B35);
   static const _gradientBottom = Color(0xFF12151C);
-
-  static BoxDecoration get _screenBackgroundDecoration {
-    const stepCount = 18;
-    final colors = List<Color>.generate(stepCount, (index) {
-      final t = index / (stepCount - 1);
-      final blend = Curves.easeOutCubic.transform(t);
-      return Color.lerp(_gradientTop, _gradientBottom, blend)!;
-    });
-    final stops = List<double>.generate(
-      stepCount,
-      (index) => index / (stepCount - 1),
-    );
-
-    return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: colors,
-        stops: stops,
-        tileMode: TileMode.clamp,
-      ),
-    );
-  }
 
   static const _beforeYouStartItems = [
     'Use headphones for the best experience',
@@ -45,21 +38,35 @@ class TaskDetailsScreen extends StatelessWidget {
     'Listen carefully — the quiz follows immediately',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _fetchQuiz();
+    });
+  }
+
+  void _fetchQuiz() {
+    final storyId = widget.storyId;
+    final difficulty = widget.difficulty;
+    if (storyId == null || difficulty == null) return;
+    ref
+        .read(quizProvider.notifier)
+        .fetchQuiz(storyId: storyId, difficulty: difficulty.name.toUpperCase());
+  }
+
   String get _badgeLabel {
-    final level = switch (difficulty) {
+    final level = switch (widget.difficulty) {
       QuizDifficulty.easy => 'LEVEL 1',
       QuizDifficulty.medium => 'LEVEL 2',
       QuizDifficulty.hard => 'LEVEL 3',
       null => 'LEVEL 1',
     };
 
-    final storyMatch = RegExp(
-      r'Story\s*(\d+)',
-      caseSensitive: false,
-    ).firstMatch(task?.subtitle ?? '');
-
-    final story = storyMatch != null
-        ? 'STORY ${storyMatch.group(1)}'
+    final id = widget.storyId ?? '';
+    final story = id.isNotEmpty
+        ? 'STORY ${id.substring(0, id.length > 8 ? 8 : id.length).toUpperCase()}'
         : 'STORY 1';
     return '$level • $story';
   }
@@ -91,7 +98,7 @@ class TaskDetailsScreen extends StatelessWidget {
                         _LevelBadge(label: _badgeLabel, color: c.primary),
                         SizedBox(height: 12.h),
                         Text(
-                          task?.title ?? 'Task Details',
+                          widget.title ?? 'Task Details',
                           style: TextStyle(
                             fontSize: 22.sp,
                             fontWeight: FontWeight.w800,
@@ -100,48 +107,7 @@ class TaskDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 24.h),
-                        _InfoCard(
-                          title: 'About this Session',
-                          child: Text(
-                            'Follow a three-way conversation between colleagues '
-                            'discussing a project deadline. Each speaker has a '
-                            'distinct speaking style. You will be tested on content '
-                            'recall and speaker attribution.',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFFB3B8C5),
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 16.h),
-                        _InfoCard(
-                          title: 'Before You Start',
-                          child: Column(
-                            children: [
-                              for (
-                                var i = 0;
-                                i < _beforeYouStartItems.length;
-                                i++
-                              ) ...[
-                                if (i > 0) SizedBox(height: 14.h),
-                                _ChecklistItem(
-                                  text: _beforeYouStartItems[i],
-                                  accentColor: c.primary,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-                        _StartListeningButton(
-                          onPressed: () {
-                            context.push(AppRoutes.session);
-                          },
-                          primaryColor: c.primary,
-                          textColor: c.onPrimary,
-                        ),
+                        _buildContent(c),
                         SizedBox(height: 24.h),
                       ],
                     ),
@@ -151,6 +117,241 @@ class TaskDetailsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContent(ColorScheme c) {
+    final quizAsync = ref.watch(quizProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _InfoCard(
+          title: 'About this Story',
+          child: Text(
+            widget.about ?? 'Story description coming soon.',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFFB3B8C5),
+              height: 1.5,
+            ),
+          ),
+        ),
+        SizedBox(height: 16.h),
+        _buildSessionSummary(quizAsync),
+        SizedBox(height: 16.h),
+        _InfoCard(
+          title: 'Before You Start',
+          child: Column(
+            children: [
+              for (
+                var i = 0;
+                i < _beforeYouStartItems.length;
+                i++
+              ) ...[
+                if (i > 0) SizedBox(height: 14.h),
+                _ChecklistItem(
+                  text: _beforeYouStartItems[i],
+                  accentColor: c.primary,
+                ),
+              ],
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
+        _StartListeningButton(
+          onPressed: () {
+            context.push(
+              AppRoutes.session,
+              extra: {
+                'storyId': widget.storyId,
+                'difficulty': widget.difficulty?.name.toUpperCase(),
+                'title': widget.title,
+              },
+            );
+          },
+          primaryColor: c.primary,
+          textColor: c.onPrimary,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSessionSummary(AsyncValue<QuizResponseModel> quizAsync) {
+    // Without a story/difficulty there's nothing to fetch — show a hint
+    // instead of an endless spinner.
+    final hasParams = widget.storyId != null && widget.difficulty != null;
+
+    return _InfoCard(
+      title: 'Session Summary',
+      child: !hasParams
+          ? Text(
+              'Select a story to see session details.',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFFB3B8C5),
+                height: 1.5,
+              ),
+            )
+          : quizAsync.when(
+        skipLoadingOnRefresh: true,
+        loading: () => Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.h),
+          child: Center(
+            child: SizedBox(
+              width: 28.w,
+              height: 28.w,
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 2.5,
+              ),
+            ),
+          ),
+        ),
+        error: (error, stackTrace) => Column(
+          children: [
+            Text(
+              'Could not load the session details.',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFFB3B8C5),
+                height: 1.5,
+              ),
+            ),
+            SizedBox(height: 14.h),
+            _RetryButton(onTap: _fetchQuiz),
+          ],
+        ),
+        data: (response) {
+          final questions = response.questions;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SummaryRow(
+                icon: Icons.quiz_outlined,
+                label: 'Questions',
+                value: '${questions.length}',
+              ),
+              if (questions.isNotEmpty &&
+                  questions.first.difficulty.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                _SummaryRow(
+                  icon: Icons.speed_rounded,
+                  label: 'Difficulty',
+                  value: questions.first.difficulty,
+                ),
+              ],
+              if (questions.isNotEmpty && questions.first.audio.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                _SummaryRow(
+                  icon: Icons.headphones_rounded,
+                  label: 'Audio',
+                  value: 'Included',
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  static BoxDecoration get _screenBackgroundDecoration {
+    const stepCount = 18;
+    final colors = List<Color>.generate(stepCount, (index) {
+      final t = index / (stepCount - 1);
+      final blend = Curves.easeOutCubic.transform(t);
+      return Color.lerp(_gradientTop, _gradientBottom, blend)!;
+    });
+    final stops = List<double>.generate(
+      stepCount,
+      (index) => index / (stepCount - 1),
+    );
+
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: colors,
+        stops: stops,
+        tileMode: TileMode.clamp,
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18.w, color: AppColors.primary),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFFB3B8C5),
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RetryButton extends StatelessWidget {
+  const _RetryButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 46.h,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50.r),
+          ),
+        ),
+        child: Text(
+          'Retry',
+          style: TextStyle(
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }

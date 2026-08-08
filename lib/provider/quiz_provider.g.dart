@@ -1,29 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'notification_provider.dart';
+part of 'quiz_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$notificationsHash() => r'356f6801173932c0128d0657d98c1e9f857f0330';
+String _$quizHash() => r'ae1f911659879f7cac3c15e2dee4aa800405d5b8';
 
-/// See also [Notifications].
-@ProviderFor(Notifications)
-final notificationsProvider =
-    AutoDisposeAsyncNotifierProvider<
-      Notifications,
-      NotificationResponseModel
-    >.internal(
-      Notifications.new,
-      name: r'notificationsProvider',
+/// See also [Quiz].
+@ProviderFor(Quiz)
+final quizProvider =
+    AutoDisposeAsyncNotifierProvider<Quiz, QuizResponseModel>.internal(
+      Quiz.new,
+      name: r'quizProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$notificationsHash,
+          : _$quizHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$Notifications = AutoDisposeAsyncNotifier<NotificationResponseModel>;
+typedef _$Quiz = AutoDisposeAsyncNotifier<QuizResponseModel>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -16,7 +16,6 @@ import 'package:go_router/go_router.dart';
 import '../../view/main_nav_bar.dart';
 import '../../view/home/home_screen.dart';
 import '../../view/home/task_details_screen.dart';
-import '../../models/task_item_model.dart';
 import '../../view/home/widgets/quiz_difficulty_dialog.dart';
 import '../../view/auth/splash_screen.dart';
 import '../../view/auth/onboarding_screen.dart';
@@ -74,19 +73,38 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.taskDetails,
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
+        final difficultyName = extra?['difficulty'] as String?;
         return TaskDetailsScreen(
-          task: extra?['task'] as TaskItemModel?,
-          difficulty: extra?['difficulty'] as QuizDifficulty?,
+          title: extra?['title'] as String?,
+          storyId: extra?['storyId'] as String?,
+          difficulty: difficultyName == null
+              ? null
+              : QuizDifficultyX.fromApiKey(difficultyName),
+          about: extra?['about'] as String?,
         );
       },
     ),
     GoRoute(
       path: AppRoutes.session,
-      builder: (context, state) => const SessionScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return SessionScreen(
+          storyId: extra?['storyId'] as String?,
+          difficulty: extra?['difficulty'] as String?,
+          title: extra?['title'] as String?,
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.quiz,
-      builder: (context, state) => const QuizScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return QuizScreen(
+          storyId: extra?['storyId'] as String?,
+          difficulty: extra?['difficulty'] as String?,
+          title: extra?['title'] as String?,
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.quizResult,

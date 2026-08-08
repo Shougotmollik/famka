@@ -1,6 +1,8 @@
 import 'package:animations/animations.dart';
 import 'package:famka/config/routes/router_path.dart';
 import 'package:famka/config/theme/app_colors.dart';
+import 'package:famka/models/home.dart';
+import 'package:famka/provider/home_provider.dart';
 import 'package:famka/provider/notification_provider.dart';
 import 'package:famka/provider/user_provider.dart';
 import 'package:famka/utils/text_formatter.dart';
@@ -26,89 +28,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   late final AnimationController _animationController;
   late final Animation<double> _appBarAnimation;
   late final Animation<double> _streakAnimation;
-  late final List<Animation<double>> _cardAnimations;
+  final Map<int, Animation<double>> _cardAnimationCache = {};
 
-  late final List<TaskCategoryModel> _categories = [
-    TaskCategoryModel(
-      title: 'Easy',
-      subtitle: 'Level 1 · Stories 3',
-      totalTasks: 3,
-      completedTasks: 3,
-      tasks: [
-        TaskItemModel(
-          title: 'Basic Greetings',
-          subtitle: '02:15 · Story 1',
-          progress: 3,
-          totalProgress: 3,
-        ),
-        TaskItemModel(
-          title: 'Colors & Numbers',
-          subtitle: '03:00 · Story 2',
-          progress: 3,
-          totalProgress: 3,
-        ),
-        TaskItemModel(
-          title: 'Simple Conversations',
-          subtitle: '04:30 · Story 3',
-          progress: 3,
-          totalProgress: 3,
-        ),
-      ],
-    ),
-    TaskCategoryModel(
-      title: 'Medium',
-      subtitle: 'Level 2 · Stories 3',
-      totalTasks: 3,
-      completedTasks: 1,
-      isPurple: true,
-      textIcon: '2',
-      tasks: [
-        TaskItemModel(
-          title: 'Radio Interview: Climate',
-          subtitle: '07:20 · Story 1',
-          progress: 2,
-          totalProgress: 3,
-          isActive: true,
-        ),
-        TaskItemModel(
-          title: 'Morning Habits Podcast',
-          subtitle: '07:20 · Story 2',
-          progress: 0,
-          totalProgress: 3,
-        ),
-        TaskItemModel(
-          title: 'Morning Habits Podcast',
-          subtitle: '07:20 · Story 3',
-          progress: 0,
-          totalProgress: 3,
-          isNew: true,
-        ),
-      ],
-    ),
-    TaskCategoryModel(
-      title: 'Advanced',
-      subtitle: 'Level 3 · Stories 3',
-      totalTasks: 3,
-      completedTasks: 0,
-      tasks: [],
-    ),
-    TaskCategoryModel(
-      title: 'Hard',
-      subtitle: 'Level 3 · Stories 3',
-      totalTasks: 3,
-      completedTasks: 0,
-      tasks: [],
-    ),
-  ];
-  final Map<String, bool> _expandedStates = {'Medium': true};
+  final Map<String, bool> _expandedStates = {};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ref.read(notificationsProvider.notifier).fetchNotifications();
-      }
+      if (!mounted) return;
+      ref.read(notificationsProvider.notifier).fetchNotifications();
+      ref.read(homeProvider.notifier).fetchHomeData();
     });
     _animationController = AnimationController(
       vsync: this,
@@ -123,13 +53,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       parent: _animationController,
       curve: const Interval(0.15, 0.45, curve: Curves.easeOut),
     );
-    _cardAnimations = List.generate(
-      _categories.length,
-      (i) => CurvedAnimation(
-        parent: _animationController,
-        curve: Interval(0.3 + i * 0.12, 0.55 + i * 0.12, curve: Curves.easeOut),
-      ),
-    );
 
     _animationController.forward();
   }
@@ -140,35 +63,144 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.dispose();
   }
 
+  Animation<double> _cardAnimationFor(int index) {
+    return _cardAnimationCache.putIfAbsent(
+      index,
+      () => CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(
+          0.3 + index * 0.12,
+          0.55 + index * 0.12,
+          curve: Curves.easeOut,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final homeAsync = ref.watch(homeProvider);
+    final data = homeAsync.value;
+    final hasData =
+        (data?.weekProgress.days.isNotEmpty ?? false) ||
+        (data?.levels.isNotEmpty ?? false);
+
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Column(
-            children: [
-              SizedBox(height: 54.h),
-              FadeScaleTransition(
-                animation: _appBarAnimation,
-                child: _buildAppBar(ref),
-              ),
-              SizedBox(height: 24.h),
-              FadeScaleTransition(
-                animation: _streakAnimation,
-                child: _buildStreakSection(),
-              ),
-              SizedBox(height: 24.h),
-              _buildTasksList(),
-              SizedBox(height: 100.h),
-            ],
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(homeProvider.notifier).fetchHomeData(),
+        color: AppColors.primary,
+        backgroundColor: const Color(0xFF1A1E25),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Column(
+              children: [
+                SizedBox(height: 54.h),
+                FadeScaleTransition(
+                  animation: _appBarAnimation,
+                  child: _buildAppBar(ref),
+                ),
+                SizedBox(height: 24.h),
+                if (!hasData)
+                  homeAsync.hasError
+                      ? _buildErrorState()
+                      : _buildLoadingState()
+                else ...[
+                  if (data!.weekProgress.days.isNotEmpty) ...[
+                    FadeScaleTransition(
+                      animation: _streakAnimation,
+                      child: _buildStreakSection(data.weekProgress),
+                    ),
+                    SizedBox(height: 24.h),
+                  ],
+                  _buildTasksList(data.levels),
+                ],
+                SizedBox(height: 100.h),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStreakSection() {
+  Widget _buildLoadingState() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 60.h),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 40.w,
+            height: 40.w,
+            child: const CircularProgressIndicator(
+              strokeWidth: 3,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Loading your lessons...',
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFFB3B8C5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 40.h),
+      child: Column(
+        children: [
+          Icon(
+            Icons.cloud_off_rounded,
+            size: 48.w,
+            color: const Color(0xFF8B8E95),
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            'Could not load home data',
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'Pull to refresh or tap Retry to try again.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFFB3B8C5),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          FilledButton.icon(
+            onPressed: () => ref.read(homeProvider.notifier).fetchHomeData(),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50.r),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            ),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStreakSection(WeekProgressModel progress) {
     return Column(
       children: [
         Row(
@@ -183,11 +215,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
             Text(
-              "5 of 7 days",
+              '${progress.completedDays} of ${progress.totalDays} days',
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w400,
-                color: Color(0XFF_B3B8C5),
+                color: const Color(0XFF_B3B8C5),
               ),
             ),
           ],
@@ -195,50 +227,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         SizedBox(height: 16.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            StreakDayItem(
-              day: 'MON',
-              date: '01',
-              isCompleted: true,
-              isToday: false,
-            ),
-            StreakDayItem(
-              day: 'TUE',
-              date: '02',
-              isCompleted: false,
-              isToday: false,
-            ),
-            StreakDayItem(
-              day: 'WED',
-              date: '03',
-              isCompleted: true,
-              isToday: false,
-            ),
-            StreakDayItem(
-              day: 'THR',
-              date: '04',
-              isCompleted: false,
-              isToday: true,
-            ),
-            StreakDayItem(
-              day: 'FRI',
-              date: '05',
-              isCompleted: true,
-              isToday: false,
-            ),
-            StreakDayItem(
-              day: 'SAT',
-              date: '06',
-              isCompleted: true,
-              isToday: false,
-            ),
-            StreakDayItem(
-              day: 'SUN',
-              date: '07',
-              isCompleted: true,
-              isToday: false,
-            ),
-          ],
+          children: progress.days.map((d) {
+            return StreakDayItem(
+              day: d.day,
+              date: d.date.toString().padLeft(2, '0'),
+              isCompleted: d.isCompleted,
+              isToday: d.isToday,
+            );
+          }).toList(),
         ),
       ],
     );
@@ -274,7 +270,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
-                color: Color(0XFF_B3B8C5),
+                color: const Color(0XFF_B3B8C5),
               ),
             ),
             Text(
@@ -297,9 +293,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Container(
                 padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
-                  color: Color(0XFF_1F242B),
+                  color: const Color(0XFF_1F242B),
                   borderRadius: BorderRadius.circular(100.r),
-                  border: Border.all(color: Color(0XFF_3A4150)),
+                  border: Border.all(color: const Color(0XFF_3A4150)),
                 ),
                 child: SvgPicture.asset("assets/icons/Bell.svg"),
               ),
@@ -356,27 +352,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildTasksList() {
+  Widget _buildTasksList(List<LevelModel> levels) {
     return Column(
-      children: List.generate(_categories.length, (index) {
-        final category = _categories[index];
+      children: List.generate(levels.length, (index) {
+        final category = _toCategory(levels[index]);
+        final expanded = _expandedStates[category.title] ?? index == 0;
         return Padding(
           padding: EdgeInsets.only(bottom: 16.h),
           child: FadeScaleTransition(
-            animation: _cardAnimations[index],
+            animation: _cardAnimationFor(index),
             child: TaskCategoryCard(
               category: category,
-              isExpanded: _expandedStates[category.title] ?? false,
+              isExpanded: expanded,
               onTap: () {
                 setState(() {
-                  _expandedStates[category.title] =
-                      !(_expandedStates[category.title] ?? false);
+                  _expandedStates[category.title] = !expanded;
                 });
               },
             ),
           ),
         );
       }),
+    );
+  }
+
+  TaskCategoryModel _toCategory(LevelModel level) {
+    var newBadgeAssigned = false;
+    return TaskCategoryModel(
+      title: level.levelName,
+      subtitle: 'Stories ${level.totalStories}',
+      totalTasks: level.totalStories,
+      completedTasks: level.completedStories,
+      isPurple: level.levelName.toLowerCase().contains('new'),
+      tasks: level.stories.map((story) {
+        final attempted = story.difficulties.values
+            .where((d) => d.attempted)
+            .length;
+        // Show the "New" badge only on the first un-attempted story per
+        // level, so a fresh user doesn't see it on every story.
+        final isNew = !newBadgeAssigned && !story.completed && attempted == 0;
+        if (isNew) newBadgeAssigned = true;
+        return _toTask(story, isNew: isNew);
+      }).toList(),
+    );
+  }
+
+  TaskItemModel _toTask(StoryModel story, {bool isNew = false}) {
+    final total = story.difficulties.length;
+    final attempted = story.difficulties.values
+        .where((d) => d.attempted)
+        .length;
+    return TaskItemModel(
+      title: story.storyName,
+      subtitle: story.about,
+      progress: story.completed ? total : attempted,
+      totalProgress: total,
+      isActive: attempted > 0 && !story.completed,
+      isNew: isNew,
+      storyId: story.storyId,
+      attemptedDifficulties: story.difficulties.map(
+        (key, value) => MapEntry(key, value.attempted),
+      ),
     );
   }
 }
